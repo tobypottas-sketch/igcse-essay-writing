@@ -45,3 +45,37 @@ test('Teacher UI re-checks Hub authorization before revealing controls', () => {
   assert.match(html, /function\s+applyTeacherUI[\s\S]*hasHubStaffAccess\(\)/);
   assert.match(html, /function\s+toggleTeacherMode[\s\S]*hasHubStaffAccess\(\)/);
 });
+
+test('Essay state persists Practice or Exam mode and submission state', () => {
+  assert.match(html, /studyMode:\s*['"]practice['"]/);
+  assert.match(html, /examSubmitted:\s*false/);
+  assert.match(html, /id=['"]btnPracticeMode['"]/);
+  assert.match(html, /id=['"]btnExamMode['"]/);
+  assert.match(html, /function\s+setStudyMode\s*\(/);
+  assert.match(html, /function\s+updateModeUI\s*\(/);
+});
+
+test('unfinished Exam blocks Review and Preview without rendering analysis', () => {
+  assert.match(html, /function\s+switchTab[\s\S]*state\.studyMode\s*===\s*['"]exam['"][\s\S]*!state\.examSubmitted[\s\S]*review[\s\S]*preview/);
+  assert.match(html, /function\s+updateAll[\s\S]*state\.studyMode\s*===\s*['"]exam['"][\s\S]*!state\.examSubmitted[\s\S]*clearReviewOutputs\(\)[\s\S]*return/);
+  assert.match(html, /function\s+clearReviewOutputs\s*\(/);
+});
+
+test('Exam submission requires all four essay sections and then locks editing', () => {
+  assert.match(html, /function\s+isExamComplete\s*\(/);
+  assert.match(html, /draftIntro[\s\S]*draftArg1[\s\S]*draftArg2[\s\S]*draftConc/);
+  assert.match(html, /function\s+submitExam\s*\([\s\S]*!isExamComplete\(\)[\s\S]*return[\s\S]*state\.examSubmitted\s*=\s*true[\s\S]*saveState\(\)[\s\S]*switchTab\(['"]review['"]\)/);
+  assert.match(html, /function\s+updateModeUI[\s\S]*examSubmitted[\s\S]*disabled/);
+});
+
+test('Exam mode has a fresh-attempt path and mode switching does not silently keep work', () => {
+  assert.match(html, /function\s+startNewExamAttempt\s*\(/);
+  assert.match(html, /function\s+hasCurrentWork\s*\(/);
+  assert.match(html, /function\s+clearCurrentWorkspace\s*\(/);
+  assert.match(html, /function\s+setStudyMode[\s\S]*hasCurrentWork\(\)[\s\S]*confirm/);
+  assert.match(html, /startNewExamAttempt[\s\S]*clearCurrentWorkspace\(\)[\s\S]*examSubmitted\s*=\s*false/);
+});
+
+test('Practice mode keeps Review and Preview available before submission', () => {
+  assert.match(html, /state\.studyMode\s*!==\s*['"]exam['"]/);
+});
