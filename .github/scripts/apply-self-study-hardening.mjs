@@ -8,7 +8,7 @@ function replaceOnce(before,after,label){
   html=html.replace(before,after);
 }
 
-const suiteCss=`\n/* ===== CAMBRIDGE SUITE VISUAL REFRESH ===== */\n:root{\n  --teal:#149b96;--teal-deep:#0d7f7b;--teal-lite:#eaf8f7;\n  --rose:#c88383;--rose-deep:#ad6f70;--rose-lite:#fbefef;\n  --suite-ink:#293638;--suite-muted:#657477;--suite-line:#d7e5e4;\n}\nbody{background:linear-gradient(180deg,#f5fbfb 0%,#f7f8f7 100%);color:var(--suite-ink)}\n.app-header{background:linear-gradient(135deg,#dff4f2 0%,#ccebea 100%);color:var(--suite-ink);box-shadow:0 4px 18px rgba(30,72,75,.10)}\n.header-logo{width:auto;height:50px;background:transparent;border-radius:0}\n.header-logo img{display:block;width:auto;height:48px;object-fit:contain}\n.header-badge{background:rgba(20,155,150,.10);color:var(--teal-deep);border:1px solid rgba(20,155,150,.22)}\n.btn-mode{background:rgba(200,131,131,.12);border:1px solid rgba(173,111,112,.30);color:var(--rose-deep)}\n.btn-mode:hover,.btn-mode.active{background:var(--rose);border-color:var(--rose);color:#fff}\n.tab-nav{border-top:1px solid rgba(20,155,150,.18)}\n.tab-btn{color:#607173}.tab-btn:hover{color:var(--teal-deep);background:rgba(20,155,150,.06)}.tab-btn.active{color:var(--teal-deep);border-bottom-color:var(--teal)}\n.card{border:1px solid var(--suite-line);border-radius:14px;box-shadow:0 3px 14px rgba(39,75,78,.06)}\n.card-header{background:#fbfefe;border-bottom:1px solid var(--suite-line)}\n.card-header .accent-bar{background:var(--teal)}\n.task-banner{background:linear-gradient(135deg,var(--teal-lite),#fff);border-left-color:var(--teal);border-radius:0 14px 14px 0}\n.task-banner .task-label{color:var(--teal-deep)}\n.btn-primary{background:var(--teal)}.btn-primary:hover{background:var(--teal-deep)}\n.btn-outline:hover{border-color:var(--teal);color:var(--teal-deep)}\ntextarea:focus,input:focus,select:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(20,155,150,.11)}\n.wc-meter{background:var(--teal-lite);border:1px solid var(--suite-line)}\n#wcTotal{color:var(--teal)!important}\n`; 
+const suiteCss=`\n/* ===== CAMBRIDGE SUITE VISUAL REFRESH ===== */\n:root{\n  --teal:#149b96;--teal-deep:#0d7f7b;--teal-lite:#eaf8f7;\n  --rose:#c88383;--rose-deep:#ad6f70;--rose-lite:#fbefef;\n  --suite-ink:#293638;--suite-muted:#657477;--suite-line:#d7e5e4;\n}\nbody{background:linear-gradient(180deg,#f5fbfb 0%,#f7f8f7 100%);color:var(--suite-ink)}\n.app-header{background:linear-gradient(135deg,#dff4f2 0%,#ccebea 100%);color:var(--suite-ink);box-shadow:0 4px 18px rgba(30,72,75,.10)}\n.header-logo{width:auto;height:50px;background:transparent;border-radius:0}\n.header-logo img{display:block;width:auto;height:48px;object-fit:contain}\n.header-badge{background:rgba(20,155,150,.10);color:var(--teal-deep);border:1px solid rgba(20,155,150,.22)}\n.btn-mode{background:rgba(200,131,131,.12);border:1px solid rgba(173,111,112,.30);color:var(--rose-deep)}\n.btn-mode:hover,.btn-mode.active{background:var(--rose);border-color:var(--rose);color:#fff}\n.tab-nav{border-top:1px solid rgba(20,155,150,.18)}\n.tab-btn{color:#607173}.tab-btn:hover{color:var(--teal-deep);background:rgba(20,155,150,.06)}.tab-btn.active{color:var(--teal-deep);border-bottom-color:var(--teal)}\n.card{border:1px solid var(--suite-line);border-radius:14px;box-shadow:0 3px 14px rgba(39,75,78,.06)}\n.card-header{background:#fbfefe;border-bottom:1px solid var(--suite-line)}\n.card-header .accent-bar{background:var(--teal)}\n.task-banner{background:linear-gradient(135deg,var(--teal-lite),#fff);border-left-color:var(--teal);border-radius:0 14px 14px 0}\n.task-banner .task-label{color:var(--teal-deep)}\n.btn-primary{background:var(--teal)}.btn-primary:hover{background:var(--teal-deep)}\n.btn-outline:hover{border-color:var(--teal);color:var(--teal-deep)}\ntextarea:focus,input:focus,select:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(20,155,150,.11)}\n.wc-meter{background:var(--teal-lite);border:1px solid var(--suite-line)}\n#wcTotal{color:var(--teal)!important}\n`;
 replaceOnce('\n</style>', suiteCss+'\n</style>', 'suite CSS');
 
 replaceOnce(
@@ -22,9 +22,13 @@ replaceOnce(
 'teacher button hidden');
 
 replaceOnce(
-`No essay question set yet. Ask your teacher or switch to Teacher Mode to set the task.`,
-`No essay question set yet. Open a shared task link from your teacher.`,
-'empty-task guidance');
+`<div class="task-question" id="taskQuestionDisplay">No essay question set yet. Ask your teacher or switch to Teacher Mode to set the task.</div>`,
+`<div class="task-question" id="taskQuestionDisplay">No essay question set yet. Open a shared task link from your teacher.</div>`,
+'initial empty-task guidance');
+replaceOnce(
+`qd.textContent = s.essayQuestion || 'No essay question set yet. Ask your teacher or switch to Teacher Mode to set the task.';`,
+`qd.textContent = s.essayQuestion || 'No essay question set yet. Open a shared task link from your teacher.';`,
+'dynamic empty-task guidance');
 
 replaceOnce(
 `let state = {\n  teacherMode: false,`,
