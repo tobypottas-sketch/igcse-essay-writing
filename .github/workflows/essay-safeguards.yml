@@ -16,10 +16,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: node .github/scripts/apply-essay-safeguards.mjs
-      - run: node .github/scripts/apply-essay-exam-mode.mjs
-      - run: node .github/scripts/apply-essay-exam-draft-lock.mjs
-      - run: node .github/scripts/apply-essay-controlled-tasks.mjs
       - run: node .github/scripts/apply-essay-embedded-init.mjs
       - run: node --test tests/essay-safeguards.test.mjs
       - name: Commit generated safeguard changes
