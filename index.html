@@ -699,6 +699,11 @@ body{background:linear-gradient(180deg,#f5fbfb 0%,#f7f8f7 100%);color:var(--suit
 textarea:focus,input:focus,select:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(20,155,150,.11)}
 .wc-meter{background:var(--teal-lite);border:1px solid var(--suite-line)}
 #wcTotal{color:var(--teal)!important}
+.study-mode-toggle{display:flex;gap:4px;padding:3px;border:1px solid rgba(20,155,150,.22);border-radius:8px;background:rgba(255,255,255,.45)}
+.study-mode-toggle .btn-mode{padding:5px 10px;border-radius:6px}
+#btnPracticeMode.active{background:var(--teal);border-color:var(--teal);color:#fff}
+#btnExamMode.active{background:var(--rose);border-color:var(--rose);color:#fff}
+.tab-btn[aria-disabled="true"]{opacity:.45;cursor:not-allowed}
 
 </style>
 </head>
@@ -726,6 +731,10 @@ textarea:focus,input:focus,select:focus{border-color:var(--teal);box-shadow:0 0 
     <div class="header-right">
       <span class="header-badge">Cambridge IGCSE 0511</span>
       <span class="autosave-indicator no-print" title="Autosave status"><span class="autosave-dot saved" id="autosaveDot"></span><span id="autosaveLabel" style="font-size:0.7rem;opacity:0.8;">Saved</span></span>
+      <div class="study-mode-toggle no-print" id="studyModeToggle" aria-label="Study mode">
+        <button class="btn-mode active" id="btnPracticeMode" onclick="setStudyMode('practice')">Practice</button>
+        <button class="btn-mode" id="btnExamMode" onclick="setStudyMode('exam')">Exam</button>
+      </div>
       <button class="btn-mode" id="btnTeacherToggle" onclick="toggleTeacherMode()" style="display:none;">Teacher Mode</button>
     </div>
   </div>
@@ -733,9 +742,9 @@ textarea:focus,input:focus,select:focus{border-color:var(--teal);box-shadow:0 0 
     <button class="tab-btn active" data-tab="task" onclick="switchTab('task')">Task</button>
     <button class="tab-btn" data-tab="plan" onclick="switchTab('plan')">Plan</button>
     <button class="tab-btn" data-tab="draft" onclick="switchTab('draft')">Draft</button>
-    <button class="tab-btn" data-tab="review" onclick="switchTab('review')">Review</button>
-    <button class="tab-btn" data-tab="preview" onclick="switchTab('preview')">Preview &amp; Export</button>
-    <button class="tab-btn" data-tab="drafts" onclick="switchTab('drafts')">Saved Drafts</button>
+    <button class="tab-btn" id="tabReview" data-tab="review" onclick="switchTab('review')">Review</button>
+    <button class="tab-btn" id="tabPreview" data-tab="preview" onclick="switchTab('preview')">Preview &amp; Export</button>
+    <button class="tab-btn" id="tabDrafts" data-tab="drafts" onclick="switchTab('drafts')">Saved Drafts</button>
     <button class="tab-btn" data-tab="teacher" onclick="switchTab('teacher')" id="tabTeacher" style="display:none;">Teacher Settings</button>
     <button class="tab-btn" data-tab="analytics" onclick="switchTab('analytics')" id="tabAnalytics" style="display:none;">Analytics</button>
   </nav>
@@ -898,9 +907,11 @@ textarea:focus,input:focus,select:focus{border-color:var(--teal);box-shadow:0 0 
       </div>
     </div>
 
-    <div class="btn-group no-print" style="justify-content:center;margin-top:16px;">
-      <button class="btn btn-primary" onclick="switchTab('review')">Review My Essay &rarr;</button>
-      <button class="btn btn-secondary" onclick="switchTab('preview')">Preview Final Essay</button>
+    <div class="btn-group no-print" id="draftActionGroup" style="justify-content:center;margin-top:16px;">
+      <button class="btn btn-primary" id="btnReviewDraft" onclick="switchTab('review')">Review My Essay &rarr;</button>
+      <button class="btn btn-secondary" id="btnPreviewDraft" onclick="switchTab('preview')">Preview Final Essay</button>
+      <button class="btn btn-primary" id="btnSubmitExam" onclick="submitExam()" style="display:none;">Submit Exam</button>
+      <button class="btn btn-secondary" id="btnNewExamAttempt" onclick="startNewExamAttempt()" style="display:none;">Start new attempt</button>
     </div>
   </div>
 
@@ -1068,8 +1079,9 @@ textarea:focus,input:focus,select:focus{border-color:var(--teal);box-shadow:0 0 
             and the task will load automatically. Their plans and drafts remain private on their own device.
           </p>
           <div class="btn-group">
-            <button class="btn btn-primary" onclick="copyStudentTaskLink()">Copy Student Task Link</button>
-            <button class="btn btn-secondary" onclick="openStudentTaskPreview()">Open Student Preview</button>
+            <button class="btn btn-primary" onclick="copyStudentTaskLink()">Copy Practice Link</button>
+            <button class="btn btn-secondary" onclick="openStudentTaskPreview()">Open Practice Preview</button>
+            <button class="btn btn-primary" id="btnControlledTaskLink" onclick="requestControlledTaskLink()">Create Controlled Exam Link</button>
           </div>
           <div id="studentTaskLinkWrap" style="display:none;margin-top:14px;">
             <label for="studentTaskLinkOutput">Student task link</label>
@@ -1182,7 +1194,8 @@ textarea:focus,input:focus,select:focus{border-color:var(--teal);box-shadow:0 0 
 // ===== STATE =====
 let state = {
   teacherMode: false,
-  teacherAccessAllowed: false,
+  studyMode: 'practice',
+  examSubmitted: false,
   settings: {
     essayQuestion: '',
     audience: 'teacher',
@@ -1202,7 +1215,9 @@ let state = {
   teacherNotes: '',
   lastAnalysis: null,
   sharedTaskKey: '',
+  controlledTaskId: '',
 };
+const INITIAL_STATE_JSON = JSON.stringify(state);
 
 // Default comment bank
 const DEFAULT_COMMENTS = [
@@ -1231,7 +1246,12 @@ const REASON_MARKERS = ["because","since","as","due to","owing to","the reason",
 const EXAMPLE_MARKERS = ["for example","for instance","such as","to illustrate","an example of","consider","take for example","a case in point","specifically"];
 
 // ===== INIT =====
-document.addEventListener('DOMContentLoaded', function() {
+let appInitialised = false;
+let domReady = false;
+
+function initialiseApp() {
+  if (appInitialised || !domReady) return;
+  appInitialised = true;
   loadState();
   const sharedTaskLoaded = applySharedTaskFromUrl();
   applySettings();
@@ -1242,11 +1262,69 @@ document.addEventListener('DOMContentLoaded', function() {
     saveState();
     setTimeout(function(){ showToast('Shared essay task loaded'); }, 300);
   }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  domReady = true;
+  if (window.parent === window) initialiseApp();
 });
 
 // ===== LOCAL STORAGE =====
 
 const MEMORY_STORAGE = {};
+let hubStorageNamespace = 'anonymous';
+let hubStaffAccess = false;
+
+function storageKey(name) {
+  return `igcse0511:${hubStorageNamespace}:${name}`;
+}
+
+function applyHubStorageNamespace(namespace) {
+  const clean = String(namespace || '').trim().replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 96);
+  if (!clean || clean === hubStorageNamespace) return;
+  hubStorageNamespace = clean;
+  state = JSON.parse(INITIAL_STATE_JSON);
+  if (!appInitialised) return;
+  loadState();
+  applySettings();
+  updateAll();
+}
+
+function hasHubStaffAccess() {
+  return hubStaffAccess === true && window.parent !== window;
+}
+
+window.addEventListener('message', function(event) {
+  if (window.parent === window) return;
+  if (event.source !== window.parent) return;
+  if (event.origin !== window.location.origin) return;
+  const data = event.data;
+  if (!data || typeof data !== 'object') return;
+
+  if (data.type === 'essay-controlled-task-created') {
+    if (typeof data.url === 'string' && data.url) {
+      showStudentTaskLink(data.url);
+      copyTextCompat(data.url)
+        .then(function(){ showToast('Controlled Exam link copied!'); })
+        .catch(function(){ showToast('Controlled Exam link created — copy it from the box below.'); });
+    }
+    return;
+  }
+  if (data.type === 'essay-controlled-task-error') {
+    showToast(data.message || 'Controlled task could not be created.');
+    return;
+  }
+  if (data.type !== 'essay-hub-context') return;
+
+  applyHubStorageNamespace(data.storageNamespace);
+  hubStaffAccess = data.staffAccess === true;
+  if (!hubStaffAccess) state.teacherMode = false;
+  initialiseApp();
+  if (data.controlledTask) applyControlledTask(data.controlledTask);
+  const btn = document.getElementById('btnTeacherToggle');
+  if (btn) btn.style.display = hubStaffAccess ? '' : 'none';
+  applyTeacherUI();
+});
 
 function safeStorageGet(key) {
   try {
@@ -1277,21 +1355,20 @@ function saveState() {
   try {
     // Gather current UI values
     gatherUIState();
-    safeStorageSet('igcse0511_state', JSON.stringify(state));
+    safeStorageSet(storageKey('state'), JSON.stringify(state));
     showAutosave(true);
   } catch(e) { console.warn('Save failed:', e); }
 }
 
 function loadState() {
   try {
-    const saved = safeStorageGet('igcse0511_state');
+    const saved = safeStorageGet(storageKey('state'));
     if (saved) {
       const parsed = JSON.parse(saved);
       // Deep merge to preserve defaults for new fields
       state = deepMerge(state, parsed);
       // Staff access is granted only by the authenticated Self-Study Hub wrapper.
       state.teacherMode = false;
-      state.teacherAccessAllowed = false;
     }
   } catch(e) { console.warn('Load failed:', e); }
 }
@@ -1391,6 +1468,52 @@ function simpleTaskHash(text) {
   return (hash >>> 0).toString(36);
 }
 
+function requestControlledTaskLink() {
+  if (!hasHubStaffAccess()) {
+    showToast('Controlled Exam links are available through the authenticated Self-Study Hub.');
+    return;
+  }
+  const settings = taskSettingsForShare();
+  if (!settings.essayQuestion.trim()) {
+    showToast('Add an essay question before sharing.');
+    return;
+  }
+  window.parent.postMessage({
+    type: 'essay-create-controlled-task',
+    studyMode: 'exam',
+    settings: settings
+  }, window.location.origin);
+  showToast('Creating controlled Exam link...');
+}
+
+function applyControlledTask(controlledTask) {
+  const id = String(controlledTask?.id || '');
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id)) return false;
+  if (!controlledTask.settings || typeof controlledTask.settings !== 'object') return false;
+  const allowed = [
+    'essayQuestion','audience','wordMin','wordMax','argType','promptIdeas',
+    'showScaffolds','showLabels','successCriteria','opinionPhrases','linkingPhrases'
+  ];
+  const incoming = {};
+  allowed.forEach(function(key) {
+    if (Object.prototype.hasOwnProperty.call(controlledTask.settings, key)) incoming[key] = controlledTask.settings[key];
+  });
+  if (state.controlledTaskId !== id) {
+    clearCurrentWorkspace();
+    state.examSubmitted = false;
+  }
+  state.settings = Object.assign({}, state.settings, incoming);
+  state.controlledTaskId = id;
+  state.sharedTaskKey = 'controlled:' + id;
+  state.studyMode = controlledTask.studyMode === 'practice' ? 'practice' : 'exam';
+  state.teacherMode = false;
+  saveState();
+  applySettings();
+  updateAll();
+  switchTab('task');
+  return true;
+}
+
 function buildStudentTaskLink() {
   const payload = {
     v: 1,
@@ -1487,6 +1610,9 @@ function applySharedTaskFromUrl() {
 
   state.settings = Object.assign({}, state.settings, incoming);
   state.sharedTaskKey = shared.key;
+  state.controlledTaskId = '';
+  state.studyMode = 'practice';
+  state.examSubmitted = false;
   state.teacherMode = false;
   return true;
 }
@@ -1529,6 +1655,7 @@ function applySettings() {
   applyPhrases();
   applyCommentBank();
   renderDraftsList();
+  updateModeUI();
 }
 
 function applyTaskDisplay() {
@@ -1539,7 +1666,8 @@ function applyTaskDisplay() {
   const meta = document.getElementById('taskMeta');
   let metaHTML = '';
   if (s.audience) metaHTML += '<span>Audience: ' + esc(s.audience) + '</span>';
-  if (state.sharedTaskKey) metaHTML += '<span>Shared teacher task</span>';
+  if (state.controlledTaskId) metaHTML += '<span>Controlled teacher task</span>';
+  else if (state.sharedTaskKey) metaHTML += '<span>Practice link</span>';
   metaHTML += '<span>Target: ' + s.wordMin + '–' + s.wordMax + ' words</span>';
   metaHTML += '<span>Type: ' + esc(s.argType === 'either' ? 'Either allowed' : s.argType === 'balanced' ? 'Balanced required' : 'One-sided required') + '</span>';
   meta.innerHTML = metaHTML;
@@ -1640,6 +1768,14 @@ function applyCommentBank() {
 
 // ===== TAB SWITCHING =====
 function switchTab(tab) {
+  if (state.studyMode === 'exam' && tab === 'drafts') {
+    showToast('Saved Drafts are unavailable in Exam Mode.');
+    return;
+  }
+  if (state.studyMode === 'exam' && !state.examSubmitted && (tab === 'review' || tab === 'preview')) {
+    showToast('Review and Preview unlock after you submit a complete essay.');
+    return;
+  }
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
   const btn = document.querySelector('.tab-btn[data-tab="' + tab + '"]');
@@ -1649,9 +1785,109 @@ function switchTab(tab) {
   if (tab === 'review' || tab === 'preview') updateAll();
 }
 
+// ===== STUDY MODE =====
+function isPracticeMode() {
+  return state.studyMode !== 'exam';
+}
+
+function hasCurrentWork() {
+  return Object.values(state.plan || {}).some(v => String(v || '').trim()) ||
+    Object.values(state.draft || {}).some(v => String(v || '').trim());
+}
+
+function clearCurrentWorkspace() {
+  state.plan = { q1:'', q2:'', q3:'', q4:'', q5:'', q6:'', q7:'' };
+  state.draft = { intro:'', arg1:'', arg2:'', conc:'' };
+  state.teacherNotes = '';
+  state.lastAnalysis = null;
+}
+
+function setStudyMode(mode) {
+  if (state.controlledTaskId) {
+    showToast('Mode is set by your teacher for this controlled task.');
+    return;
+  }
+  if (mode !== 'practice' && mode !== 'exam') return;
+  if (mode === state.studyMode) return;
+  gatherUIState();
+  if (hasCurrentWork() && !window.confirm('Switching study mode will clear the current plan and draft. Continue?')) return;
+  clearCurrentWorkspace();
+  state.studyMode = mode;
+  state.examSubmitted = false;
+  saveState();
+  applySettings();
+  updateAll();
+  switchTab('task');
+}
+
+function isExamComplete() {
+  return ['draftIntro','draftArg1','draftArg2','draftConc'].every(id => gv(id).trim().length > 0);
+}
+
+function submitExam() {
+  if (state.studyMode !== 'exam' || state.examSubmitted) return;
+  gatherUIState();
+  if (!isExamComplete()) {
+    showToast('Complete all four essay sections before submitting.');
+    switchTab('draft');
+    return;
+  }
+  state.examSubmitted = true;
+  saveState();
+  updateModeUI();
+  updateAll();
+  switchTab('review');
+  showToast('Exam submitted. Review is now unlocked.');
+}
+
+function startNewExamAttempt() {
+  if (state.studyMode !== 'exam') return;
+  gatherUIState();
+  if (hasCurrentWork() && !window.confirm('Start a fresh Exam attempt? The current unsaved workspace will be cleared.')) return;
+  clearCurrentWorkspace();
+  state.examSubmitted = false;
+  saveState();
+  applySettings();
+  updateAll();
+  switchTab('task');
+}
+
+function updateModeUI() {
+  const exam = state.studyMode === 'exam';
+  const locked = exam && state.examSubmitted;
+  const preSubmitExam = exam && !state.examSubmitted;
+  const practiceBtn = document.getElementById('btnPracticeMode');
+  const examBtn = document.getElementById('btnExamMode');
+  const controlled = Boolean(state.controlledTaskId);
+  if (practiceBtn) { practiceBtn.classList.toggle('active', !exam); practiceBtn.disabled = controlled; }
+  if (examBtn) { examBtn.classList.toggle('active', exam); examBtn.disabled = controlled; }
+
+  ['planQ1','planQ2','planQ3','planQ4','planQ5','planQ6','planQ7','draftIntro','draftArg1','draftArg2','draftConc'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.disabled = locked;
+  });
+
+  const reviewTab = document.getElementById('tabReview');
+  const previewTab = document.getElementById('tabPreview');
+  const tabDrafts = document.getElementById('tabDrafts');
+  if (reviewTab) reviewTab.setAttribute('aria-disabled', preSubmitExam ? 'true' : 'false');
+  if (previewTab) previewTab.setAttribute('aria-disabled', preSubmitExam ? 'true' : 'false');
+  if (tabDrafts) tabDrafts.setAttribute('aria-disabled', exam ? 'true' : 'false');
+  const reviewBtn = document.getElementById('btnReviewDraft');
+  const previewBtn = document.getElementById('btnPreviewDraft');
+  const submitBtn = document.getElementById('btnSubmitExam');
+  const newBtn = document.getElementById('btnNewExamAttempt');
+  if (reviewBtn) reviewBtn.style.display = preSubmitExam ? 'none' : '';
+  if (previewBtn) previewBtn.style.display = preSubmitExam ? 'none' : '';
+  if (submitBtn) submitBtn.style.display = preSubmitExam ? '' : 'none';
+  if (newBtn) newBtn.style.display = locked ? '' : 'none';
+}
+
 // ===== TEACHER MODE =====
 function toggleTeacherMode() {
-  if (!state.teacherAccessAllowed) {
+  if (!hasHubStaffAccess()) {
+    state.teacherMode = false;
+    applyTeacherUI();
     showToast('Teacher tools are available through the authenticated Self-Study Hub.');
     return;
   }
@@ -1660,21 +1896,15 @@ function toggleTeacherMode() {
   showToast(state.teacherMode ? 'Teacher tools opened' : 'Switched to Student Mode');
 }
 
-function setHubStaffAccess(allowed) {
-  state.teacherAccessAllowed = allowed === true;
-  if (!state.teacherAccessAllowed) state.teacherMode = false;
-  const btn = document.getElementById('btnTeacherToggle');
-  if (btn) btn.style.display = state.teacherAccessAllowed ? '' : 'none';
-  applyTeacherUI();
-}
-window.setHubStaffAccess = setHubStaffAccess;
-
 function applyTeacherUI() {
   const btn = document.getElementById('btnTeacherToggle');
   const tabT = document.getElementById('tabTeacher');
   const tabA = document.getElementById('tabAnalytics');
   const fbCard = document.getElementById('teacherFeedbackCard');
-  if (state.teacherMode) {
+  const allowed = hasHubStaffAccess();
+  if (!allowed) state.teacherMode = false;
+  if (btn) btn.style.display = allowed ? '' : 'none';
+  if (state.teacherMode && allowed) {
     btn.classList.add('active');
     btn.textContent = 'Student Mode';
     tabT.style.display = '';
@@ -2082,11 +2312,28 @@ function getChunks(text, size) {
 // ===== RENDER REVIEW =====
 function updateAll() {
   updateWordCounts();
+  if (state.studyMode === 'exam' && !state.examSubmitted) {
+    clearReviewOutputs();
+    return;
+  }
   const analysis = analyzeEssay();
   renderChecks(analysis);
   renderLangFeedback(analysis);
   renderPerformance(analysis);
   renderPreview();
+}
+
+function clearReviewOutputs() {
+  const pc = document.getElementById('perfContent');
+  const pl = document.getElementById('perfLanguage');
+  const grid = document.getElementById('checkGrid');
+  const lang = document.getElementById('langFeedback');
+  const preview = document.getElementById('essayPreview');
+  if (pc) { pc.textContent = '—'; pc.className = 'perf-value'; }
+  if (pl) { pl.textContent = '—'; pl.className = 'perf-value'; }
+  if (grid) grid.innerHTML = '<p style="color:#777;font-size:0.85rem;">Feedback is locked until this Exam attempt is submitted.</p>';
+  if (lang) lang.innerHTML = '<p style="color:#777;font-size:0.85rem;">Language feedback is locked until submission.</p>';
+  if (preview) preview.innerHTML = '<p style="color:#777;font-style:italic;">Final Preview unlocks after submission.</p>';
 }
 
 function renderChecks(a) {
@@ -2259,6 +2506,10 @@ function copyTeacherNotes() {
 
 // ===== DRAFTS MANAGEMENT =====
 function saveDraft() {
+  if (state.studyMode === 'exam') {
+    showToast('Saved Drafts are unavailable in Exam Mode.');
+    return;
+  }
   const name = gv('saveDraftName').trim();
   if (!name) { showToast('Please enter a draft name.'); return; }
   gatherUIState();
@@ -2273,7 +2524,7 @@ function saveDraft() {
   // Overwrite if same name exists
   drafts = drafts.filter(d => d.name !== name);
   drafts.unshift(draft);
-  safeStorageSet('igcse0511_drafts', JSON.stringify(drafts));
+  safeStorageSet(storageKey('drafts'), JSON.stringify(drafts));
   sv('saveDraftName', '');
   renderDraftsList();
   showToast('Draft saved: ' + name);
@@ -2281,11 +2532,15 @@ function saveDraft() {
 
 function getDrafts() {
   try {
-    return JSON.parse(safeStorageGet('igcse0511_drafts') || '[]');
+    return JSON.parse(safeStorageGet(storageKey('drafts')) || '[]');
   } catch(e) { return []; }
 }
 
 function loadDraft(name) {
+  if (state.studyMode === 'exam') {
+    showToast('Saved Drafts are unavailable in Exam Mode.');
+    return;
+  }
   const drafts = getDrafts();
   const draft = drafts.find(d => d.name === name);
   if (!draft) return;
@@ -2300,7 +2555,7 @@ function loadDraft(name) {
 function deleteDraft(name) {
   let drafts = getDrafts();
   drafts = drafts.filter(d => d.name !== name);
-  safeStorageSet('igcse0511_drafts', JSON.stringify(drafts));
+  safeStorageSet(storageKey('drafts'), JSON.stringify(drafts));
   renderDraftsList();
   showToast('Deleted draft: ' + name);
 }
@@ -2357,14 +2612,14 @@ function recordSubmission() {
     ],
     langWarnings: analysis.langWarnings.filter(w => w.type === 'warn').map(w => w.msg)
   });
-  safeStorageSet('igcse0511_submissions', JSON.stringify(submissions));
+  safeStorageSet(storageKey('submissions'), JSON.stringify(submissions));
   renderAnalytics();
   showToast('Submission recorded');
 }
 
 function getSubmissions() {
   try {
-    return JSON.parse(safeStorageGet('igcse0511_submissions') || '[]');
+    return JSON.parse(safeStorageGet(storageKey('submissions')) || '[]');
   } catch(e) { return []; }
 }
 
@@ -2434,9 +2689,9 @@ function clearAllData() {
 }
 
 function doClearAll() {
-  safeStorageRemove('igcse0511_state');
-  safeStorageRemove('igcse0511_drafts');
-  safeStorageRemove('igcse0511_submissions');
+  safeStorageRemove(storageKey('state'));
+  safeStorageRemove(storageKey('drafts'));
+  safeStorageRemove(storageKey('submissions'));
   location.reload();
 }
 
@@ -2448,7 +2703,7 @@ function clearAnalytics() {
 }
 
 function doClearAnalytics() {
-  safeStorageRemove('igcse0511_submissions');
+  safeStorageRemove(storageKey('submissions'));
   renderAnalytics();
   closeModal();
   showToast('Analytics cleared');
