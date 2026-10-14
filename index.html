@@ -1203,6 +1203,7 @@ let state = {
   lastAnalysis: null,
   sharedTaskKey: '',
 };
+const INITIAL_STATE_JSON = JSON.stringify(state);
 
 // Default comment bank
 const DEFAULT_COMMENTS = [
@@ -1247,6 +1248,22 @@ document.addEventListener('DOMContentLoaded', function() {
 // ===== LOCAL STORAGE =====
 
 const MEMORY_STORAGE = {};
+let hubStorageNamespace = 'anonymous';
+
+function storageKey(name) {
+  return `igcse0511:${hubStorageNamespace}:${name}`;
+}
+
+function setHubStorageNamespace(namespace) {
+  const clean = String(namespace || '').trim().replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 96);
+  if (!clean || clean === hubStorageNamespace) return;
+  hubStorageNamespace = clean;
+  state = JSON.parse(INITIAL_STATE_JSON);
+  loadState();
+  applySettings();
+  updateAll();
+}
+window.setHubStorageNamespace = setHubStorageNamespace;
 
 function safeStorageGet(key) {
   try {
@@ -1277,14 +1294,14 @@ function saveState() {
   try {
     // Gather current UI values
     gatherUIState();
-    safeStorageSet('igcse0511_state', JSON.stringify(state));
+    safeStorageSet(storageKey('state'), JSON.stringify(state));
     showAutosave(true);
   } catch(e) { console.warn('Save failed:', e); }
 }
 
 function loadState() {
   try {
-    const saved = safeStorageGet('igcse0511_state');
+    const saved = safeStorageGet(storageKey('state'));
     if (saved) {
       const parsed = JSON.parse(saved);
       // Deep merge to preserve defaults for new fields
@@ -2273,7 +2290,7 @@ function saveDraft() {
   // Overwrite if same name exists
   drafts = drafts.filter(d => d.name !== name);
   drafts.unshift(draft);
-  safeStorageSet('igcse0511_drafts', JSON.stringify(drafts));
+  safeStorageSet(storageKey('drafts'), JSON.stringify(drafts));
   sv('saveDraftName', '');
   renderDraftsList();
   showToast('Draft saved: ' + name);
@@ -2281,7 +2298,7 @@ function saveDraft() {
 
 function getDrafts() {
   try {
-    return JSON.parse(safeStorageGet('igcse0511_drafts') || '[]');
+    return JSON.parse(safeStorageGet(storageKey('drafts')) || '[]');
   } catch(e) { return []; }
 }
 
@@ -2300,7 +2317,7 @@ function loadDraft(name) {
 function deleteDraft(name) {
   let drafts = getDrafts();
   drafts = drafts.filter(d => d.name !== name);
-  safeStorageSet('igcse0511_drafts', JSON.stringify(drafts));
+  safeStorageSet(storageKey('drafts'), JSON.stringify(drafts));
   renderDraftsList();
   showToast('Deleted draft: ' + name);
 }
@@ -2357,14 +2374,14 @@ function recordSubmission() {
     ],
     langWarnings: analysis.langWarnings.filter(w => w.type === 'warn').map(w => w.msg)
   });
-  safeStorageSet('igcse0511_submissions', JSON.stringify(submissions));
+  safeStorageSet(storageKey('submissions'), JSON.stringify(submissions));
   renderAnalytics();
   showToast('Submission recorded');
 }
 
 function getSubmissions() {
   try {
-    return JSON.parse(safeStorageGet('igcse0511_submissions') || '[]');
+    return JSON.parse(safeStorageGet(storageKey('submissions')) || '[]');
   } catch(e) { return []; }
 }
 
@@ -2434,9 +2451,9 @@ function clearAllData() {
 }
 
 function doClearAll() {
-  safeStorageRemove('igcse0511_state');
-  safeStorageRemove('igcse0511_drafts');
-  safeStorageRemove('igcse0511_submissions');
+  safeStorageRemove(storageKey('state'));
+  safeStorageRemove(storageKey('drafts'));
+  safeStorageRemove(storageKey('submissions'));
   location.reload();
 }
 
@@ -2448,7 +2465,7 @@ function clearAnalytics() {
 }
 
 function doClearAnalytics() {
-  safeStorageRemove('igcse0511_submissions');
+  safeStorageRemove(storageKey('submissions'));
   renderAnalytics();
   closeModal();
   showToast('Analytics cleared');
