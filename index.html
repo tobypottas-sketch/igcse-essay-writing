@@ -1526,7 +1526,7 @@ function buildStudentTaskLink() {
   const json = JSON.stringify(payload);
   const encoded = utf8ToBase64Url(json);
   const base = window.location.href.split('#')[0].split('?')[0];
-  return base + '?task=' + encodeURIComponent(encoded);
+  return base + '#task=' + encodeURIComponent(encoded);
 }
 
 function showStudentTaskLink(link) {
@@ -1761,9 +1761,15 @@ function applyCommentBank() {
   if (state.settings.commentBank) {
     state.settings.commentBank.split('\n').filter(l => l.trim()).forEach(l => comments.push(l.trim()));
   }
-  bank.innerHTML = comments.map(c =>
-    '<button class="comment-chip" onclick="insertComment(\'' + esc(c).replace(/'/g, "\\'") + '\')">' + esc(c) + '</button>'
-  ).join('');
+  bank.innerHTML = '';
+  comments.forEach(c => {
+    const btn = document.createElement('button');
+    btn.className = 'comment-chip';
+    btn.type = 'button';
+    btn.textContent = c;
+    btn.addEventListener('click', () => insertComment(c));
+    bank.appendChild(btn);
+  });
 }
 
 // ===== TAB SWITCHING =====
@@ -2567,11 +2573,37 @@ function renderDraftsList() {
     el.innerHTML = '<p style="color:#999;font-size:0.85rem;">No saved drafts yet.</p>';
     return;
   }
-  el.innerHTML = drafts.map(d => {
+  el.innerHTML = '';
+  drafts.forEach(d => {
     const date = new Date(d.date);
     const dateStr = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    return '<div class="draft-item"><div><span class="draft-item-name" onclick="loadDraft(\'' + esc(d.name).replace(/'/g, "\\'") + '\')">' + esc(d.name) + '</span><div class="draft-item-date">' + dateStr + '</div></div><div class="draft-item-actions"><button class="btn btn-sm btn-secondary" onclick="loadDraft(\'' + esc(d.name).replace(/'/g, "\\'") + '\')">Load</button><button class="btn btn-sm btn-danger" onclick="deleteDraft(\'' + esc(d.name).replace(/'/g, "\\'") + '\')">Delete</button></div></div>';
-  }).join('');
+    const item = document.createElement('div');
+    item.className = 'draft-item';
+    const info = document.createElement('div');
+    const name = document.createElement('span');
+    name.className = 'draft-item-name';
+    name.textContent = d.name;
+    name.addEventListener('click', () => loadDraft(d.name));
+    const dateEl = document.createElement('div');
+    dateEl.className = 'draft-item-date';
+    dateEl.textContent = dateStr;
+    info.append(name, dateEl);
+    const actions = document.createElement('div');
+    actions.className = 'draft-item-actions';
+    const load = document.createElement('button');
+    load.className = 'btn btn-sm btn-secondary';
+    load.type = 'button';
+    load.textContent = 'Load';
+    load.addEventListener('click', () => loadDraft(d.name));
+    const del = document.createElement('button');
+    del.className = 'btn btn-sm btn-danger';
+    del.type = 'button';
+    del.textContent = 'Delete';
+    del.addEventListener('click', () => deleteDraft(d.name));
+    actions.append(load, del);
+    item.append(info, actions);
+    el.appendChild(item);
+  });
 }
 
 function resetCurrentDraft() {
