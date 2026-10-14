@@ -5,6 +5,9 @@ on:
     branches:
       - feat/essay-writing-safeguards
 
+permissions:
+  contents: write
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -13,4 +16,16 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - run: node .github/scripts/apply-essay-safeguards.mjs
       - run: node --test tests/essay-safeguards.test.mjs
+      - name: Commit generated safeguard changes
+        run: |
+          if git diff --quiet -- index.html; then
+            echo "No generated changes to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "fix: isolate Essay storage by Hub user"
+          git push
