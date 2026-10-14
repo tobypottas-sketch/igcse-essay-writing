@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - feat/essay-writing-safeguards
+      - fix/fourth-hardening-audit-20261014
   pull_request:
     branches:
       - main
@@ -20,4 +21,4 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: node --test tests/essay-safeguards.test.mjs
+      - run: node --test tests/*.test.mjs
