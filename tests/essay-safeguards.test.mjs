@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 
-const html = fs.readFileSync('index.html', 'utf8');
+const html = fs.readFileSync('essay-app.html', 'utf8');
 
 test('Hub storage namespace scopes all local Essay data keys', () => {
   assert.match(html, /function\s+storageKey\s*\(/);
