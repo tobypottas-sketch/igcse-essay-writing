@@ -27,7 +27,7 @@ jobs:
         run: node scripts/apply-essay-suite-refresh.mjs
       - run: node --test tests/*.test.mjs
       - name: Upload refreshed Essay preview
-        if: github.event_name == 'push' && github.ref == 'refs/heads/style/essay-suite-refresh-20261014'
+        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/style/essay-suite-refresh-20261014'
         uses: actions/upload-artifact@v4
         with:
           name: essay-suite-refresh-preview
