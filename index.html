@@ -1768,8 +1768,12 @@ function applyCommentBank() {
 
 // ===== TAB SWITCHING =====
 function switchTab(tab) {
-  if (state.studyMode === 'exam' && !state.examSubmitted && (tab === 'review' || tab === 'preview' || tab === 'drafts')) {
-    showToast('Review, Preview and Saved Drafts unlock after you submit a complete essay.');
+  if (state.studyMode === 'exam' && tab === 'drafts') {
+    showToast('Saved Drafts are unavailable in Exam Mode.');
+    return;
+  }
+  if (state.studyMode === 'exam' && !state.examSubmitted && (tab === 'review' || tab === 'preview')) {
+    showToast('Review and Preview unlock after you submit a complete essay.');
     return;
   }
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -1868,7 +1872,7 @@ function updateModeUI() {
   const tabDrafts = document.getElementById('tabDrafts');
   if (reviewTab) reviewTab.setAttribute('aria-disabled', preSubmitExam ? 'true' : 'false');
   if (previewTab) previewTab.setAttribute('aria-disabled', preSubmitExam ? 'true' : 'false');
-  if (tabDrafts) tabDrafts.setAttribute('aria-disabled', preSubmitExam ? 'true' : 'false');
+  if (tabDrafts) tabDrafts.setAttribute('aria-disabled', exam ? 'true' : 'false');
   const reviewBtn = document.getElementById('btnReviewDraft');
   const previewBtn = document.getElementById('btnPreviewDraft');
   const submitBtn = document.getElementById('btnSubmitExam');
@@ -2502,8 +2506,8 @@ function copyTeacherNotes() {
 
 // ===== DRAFTS MANAGEMENT =====
 function saveDraft() {
-  if (state.studyMode === 'exam' && !state.examSubmitted) {
-    showToast('Saved Drafts are unavailable during an active Exam attempt.');
+  if (state.studyMode === 'exam') {
+    showToast('Saved Drafts are unavailable in Exam Mode.');
     return;
   }
   const name = gv('saveDraftName').trim();
@@ -2533,8 +2537,8 @@ function getDrafts() {
 }
 
 function loadDraft(name) {
-  if (state.studyMode === 'exam' && !state.examSubmitted) {
-    showToast('Saved Drafts are unavailable during an active Exam attempt.');
+  if (state.studyMode === 'exam') {
+    showToast('Saved Drafts are unavailable in Exam Mode.');
     return;
   }
   const drafts = getDrafts();
