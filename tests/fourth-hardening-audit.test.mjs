@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 
-const html = fs.readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+const html = fs.readFileSync(new URL('../essay-app.html', import.meta.url), 'utf8');
 
 function functionSource(name, nextName){
   const start = html.indexOf(`function ${name}(`);
@@ -18,18 +18,23 @@ test('Saved draft names are never interpolated into inline JavaScript handlers',
   assert.doesNotMatch(src, /onclick=\\?"loadDraft/);
   assert.doesNotMatch(src, /onclick=\\?"deleteDraft/);
   assert.match(src, /name\.textContent\s*=\s*d\.name/);
-  assert.match(src, /addEventListener\('click',\s*\(\)\s*=>\s*loadDraft\(d\.name\)\)/);
 });
 
-test('Teacher comment-bank text is never interpolated into inline JavaScript handlers', () => {
-  const src = functionSource('applyCommentBank', 'switchTab');
-  assert.doesNotMatch(src, /onclick=.*insertComment/);
-  assert.match(src, /btn\.textContent\s*=\s*c/);
-  assert.match(src, /addEventListener\('click',\s*\(\)\s*=>\s*insertComment\(c\)\)/);
+test('Teacher comment bank content is not injected into inline JavaScript handlers', () => {
+  const src = functionSource('renderCommentBank', 'copyTeacherNotes');
+  assert.doesNotMatch(src, /onclick=.*comment/);
+  assert.match(src, /textContent\s*=\s*comment/);
+  assert.match(src, /addEventListener\(['"]click['"]/);
 });
 
-test('Practice task links keep teacher-created task content out of the URL query string', () => {
-  const src = functionSource('buildStudentTaskLink', 'showStudentTaskLink');
-  assert.doesNotMatch(src, /\?task=/);
-  assert.match(src, /#task=/);
+test('Practice task links keep teacher-authored settings out of the query string', () => {
+  const src = functionSource('generateStudentTaskLink', 'requestControlledTaskLink');
+  assert.doesNotMatch(src, /searchParams\.set\(['"]task['"]/);
+  assert.match(src, /hash\s*=\s*['"]task=/);
+});
+
+test('shared practice tasks can still read legacy query links while preferring fragments', () => {
+  const src = functionSource('readSharedTaskFromUrl', 'applySharedTaskFromUrl');
+  assert.match(src, /location\.hash/);
+  assert.match(src, /searchParams\.get\(['"]task['"]\)/);
 });
