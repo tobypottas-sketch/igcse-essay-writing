@@ -20,7 +20,7 @@ test('direct public use has an isolated anonymous storage namespace', () => {
 });
 
 test('Hub namespace is applied internally and reloads only that users workspace', () => {
-  assert.match(html, /applyHubStorageNamespace[\s\S]*hubStorageNamespace[\s\S]*loadState\(\)[\s\S]*applySettings\(\)/);
+  assert.match(html, /applyHubStorageNamespace[\s\S]*hubStorageNamespace/);
   assert.doesNotMatch(html, /window\.setHubStorageNamespace/);
 });
 
@@ -38,6 +38,14 @@ test('embedded Hub context is accepted only from the same-origin parent frame', 
   assert.match(html, /essay-hub-context/);
   assert.match(html, /staffAccess/);
   assert.match(html, /storageNamespace/);
+});
+
+test('embedded app waits for authenticated Hub context before loading local state', () => {
+  assert.match(html, /let\s+appInitialised\s*=\s*false/);
+  assert.match(html, /function\s+initialiseApp\s*\(/);
+  assert.match(html, /DOMContentLoaded[\s\S]*window\.parent\s*===\s*window[\s\S]*initialiseApp\(\)/);
+  assert.match(html, /data\.type\s*!==\s*['"]essay-hub-context['"][\s\S]*applyHubStorageNamespace\(data\.storageNamespace\)[\s\S]*initialiseApp\(\)/);
+  assert.doesNotMatch(html, /DOMContentLoaded['"],\s*function\(\)\s*\{\s*loadState\(\)/);
 });
 
 test('Teacher UI re-checks Hub authorization before revealing controls', () => {
