@@ -1,0 +1,5 @@
+---
+permalink: /
+---
+{% capture essay_app %}{% include_relative essay-app.html %}{% endcapture %}
+{{ essay_app | replace: '</head>', '<link rel="stylesheet" href="scripts/essay-suite-refresh.css"></head>' }}
