@@ -23,3 +23,9 @@ test('Teacher comment-bank text is never interpolated into inline JavaScript han
   const src = functionSource('renderCommentBank', 'switchTab');
   assert.doesNotMatch(src, /onclick=.*insertComment/);
 });
+
+test('Practice task links keep teacher-created task content out of the URL query string', () => {
+  const src = functionSource('buildStudentTaskLink', 'showStudentTaskLink');
+  assert.doesNotMatch(src, /\?task=/);
+  assert.match(src, /#task=/);
+});
