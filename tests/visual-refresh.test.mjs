@@ -21,6 +21,6 @@ test('Essay Writer refresh styles the core shell consistently', () => {
 });
 
 test('Practice and Exam controls keep distinct suite states', () => {
-  assert.match(html, /\.btn-mode\.active\s*\{[^}]*var\(--teal-lite\)/s);
-  assert.match(html, /#btnExam\.active[\s\S]*?var\(--plum-lite\)/);
+  assert.match(html, /#btnPracticeMode\.active\s*\{[^}]*var\(--teal\)/s);
+  assert.match(html, /#btnExamMode\.active\s*\{[^}]*var\(--plum-lite\)/s);
 });
