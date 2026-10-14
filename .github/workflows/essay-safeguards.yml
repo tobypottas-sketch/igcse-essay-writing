@@ -25,10 +25,18 @@ jobs:
       - name: Generate Essay visual refresh preview
         if: github.event_name == 'push' && github.ref == 'refs/heads/style/essay-suite-refresh-20261014'
         run: node scripts/apply-essay-suite-refresh.mjs
-      - run: node --test tests/*.test.mjs
+      - name: Run safeguards
+        run: |
+          set +e
+          node --test tests/*.test.mjs > test-output.txt 2>&1
+          code=$?
+          cat test-output.txt
+          exit $code
       - name: Upload refreshed Essay preview
         if: always() && github.event_name == 'push' && github.ref == 'refs/heads/style/essay-suite-refresh-20261014'
         uses: actions/upload-artifact@v4
         with:
           name: essay-suite-refresh-preview
-          path: index.html
+          path: |
+            index.html
+            test-output.txt
