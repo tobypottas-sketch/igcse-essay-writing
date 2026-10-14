@@ -9,10 +9,14 @@ test('public app has no embedded teacher password', () => {
   assert.equal(html.includes('checkTeacherPw'), false);
 });
 
-test('teacher controls are hidden until Hub grants staff access', () => {
+test('teacher controls are hidden until authenticated Hub context grants staff access', () => {
   assert.match(html, /id="btnTeacherToggle"[^>]*style="display:none;/);
-  assert.match(html, /function setHubStaffAccess\(allowed\)/);
-  assert.match(html, /teacherAccessAllowed:\s*false/);
+  assert.match(html, /function\s+hasHubStaffAccess\s*\(/);
+  assert.match(html, /event\.source\s*!==\s*window\.parent/);
+  assert.match(html, /event\.origin\s*!==\s*window\.location\.origin/);
+  assert.match(html, /essay-hub-context/);
+  assert.doesNotMatch(html, /window\.setHubStaffAccess/);
+  assert.doesNotMatch(html, /function\s+setHubStaffAccess\s*\(/);
 });
 
 test('Essay app uses Cambridge suite branding', () => {
