@@ -1246,7 +1246,12 @@ const REASON_MARKERS = ["because","since","as","due to","owing to","the reason",
 const EXAMPLE_MARKERS = ["for example","for instance","such as","to illustrate","an example of","consider","take for example","a case in point","specifically"];
 
 // ===== INIT =====
-document.addEventListener('DOMContentLoaded', function() {
+let appInitialised = false;
+let domReady = false;
+
+function initialiseApp() {
+  if (appInitialised || !domReady) return;
+  appInitialised = true;
   loadState();
   const sharedTaskLoaded = applySharedTaskFromUrl();
   applySettings();
@@ -1257,6 +1262,11 @@ document.addEventListener('DOMContentLoaded', function() {
     saveState();
     setTimeout(function(){ showToast('Shared essay task loaded'); }, 300);
   }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  domReady = true;
+  if (window.parent === window) initialiseApp();
 });
 
 // ===== LOCAL STORAGE =====
@@ -1274,6 +1284,7 @@ function applyHubStorageNamespace(namespace) {
   if (!clean || clean === hubStorageNamespace) return;
   hubStorageNamespace = clean;
   state = JSON.parse(INITIAL_STATE_JSON);
+  if (!appInitialised) return;
   loadState();
   applySettings();
   updateAll();
@@ -1308,6 +1319,7 @@ window.addEventListener('message', function(event) {
   applyHubStorageNamespace(data.storageNamespace);
   hubStaffAccess = data.staffAccess === true;
   if (!hubStaffAccess) state.teacherMode = false;
+  initialiseApp();
   if (data.controlledTask) applyControlledTask(data.controlledTask);
   const btn = document.getElementById('btnTeacherToggle');
   if (btn) btn.style.display = hubStaffAccess ? '' : 'none';
