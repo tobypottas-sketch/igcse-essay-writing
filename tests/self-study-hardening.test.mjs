@@ -22,7 +22,7 @@ test('Essay app uses Cambridge suite branding', () => {
   assert.match(html, /cambridge-english-header\.png/);
   assert.match(html, /CAMBRIDGE SUITE VISUAL REFRESH/);
   assert.match(html, /--teal:/);
-  assert.match(html, /--rose:/);
+  assert.match(html, /--plum:/);
 });
 
 test('student empty-task guidance does not invite Teacher Mode', () => {
