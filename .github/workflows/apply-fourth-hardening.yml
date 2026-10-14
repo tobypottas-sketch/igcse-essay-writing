@@ -1,0 +1,74 @@
+name: Apply Fourth Hardening
+on:
+  push:
+    branches: [fix/fourth-hardening-audit-20261014]
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/fourth-hardening-audit-20261014
+      - name: Remove dynamic inline handlers
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          p=Path('index.html')
+          s=p.read_text()
+          comment_new="""bank.innerHTML = '';
+  comments.forEach(c => {
+    const btn = document.createElement('button');
+    btn.className = 'comment-chip';
+    btn.type = 'button';
+    btn.textContent = c;
+    btn.addEventListener('click', () => insertComment(c));
+    bank.appendChild(btn);
+  });"""
+          s,n=re.subn(r"bank\.innerHTML = comments\.map\(c =>.*?\)\.join\(''\);", comment_new, s, count=1, flags=re.S)
+          if n!=1: raise SystemExit(f'comment-bank replacements: {n}')
+          draft_new="""el.innerHTML = '';
+  drafts.forEach(d => {
+    const date = new Date(d.date);
+    const dateStr = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const item = document.createElement('div');
+    item.className = 'draft-item';
+    const info = document.createElement('div');
+    const name = document.createElement('span');
+    name.className = 'draft-item-name';
+    name.textContent = d.name;
+    name.addEventListener('click', () => loadDraft(d.name));
+    const dateEl = document.createElement('div');
+    dateEl.className = 'draft-item-date';
+    dateEl.textContent = dateStr;
+    info.append(name, dateEl);
+    const actions = document.createElement('div');
+    actions.className = 'draft-item-actions';
+    const load = document.createElement('button');
+    load.className = 'btn btn-sm btn-secondary';
+    load.type = 'button';
+    load.textContent = 'Load';
+    load.addEventListener('click', () => loadDraft(d.name));
+    const del = document.createElement('button');
+    del.className = 'btn btn-sm btn-danger';
+    del.type = 'button';
+    del.textContent = 'Delete';
+    del.addEventListener('click', () => deleteDraft(d.name));
+    actions.append(load, del);
+    item.append(info, actions);
+    el.appendChild(item);
+  });"""
+          s,n=re.subn(r"el\.innerHTML = drafts\.map\(d => \{.*?\}\)\.join\(''\);", draft_new, s, count=1, flags=re.S)
+          if n!=1: raise SystemExit(f'draft-list replacements: {n}')
+          p.write_text(s)
+          PY
+      - name: Commit patch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "fix: remove stored inline-handler injection sinks"
+          git push
