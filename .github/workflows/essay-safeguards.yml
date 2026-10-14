@@ -20,6 +20,7 @@ jobs:
       - run: node .github/scripts/apply-essay-exam-mode.mjs
       - run: node .github/scripts/apply-essay-exam-draft-lock.mjs
       - run: node .github/scripts/apply-essay-controlled-tasks.mjs
+      - run: node .github/scripts/apply-essay-embedded-init.mjs
       - run: node --test tests/essay-safeguards.test.mjs
       - name: Commit generated safeguard changes
         run: |
@@ -30,5 +31,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add index.html
-          git commit -m "feat: harden Essay exams and controlled tasks"
+          git commit -m "fix: wait for Hub identity before Essay local state"
           git push
