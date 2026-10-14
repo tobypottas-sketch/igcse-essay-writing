@@ -1182,7 +1182,6 @@ textarea:focus,input:focus,select:focus{border-color:var(--teal);box-shadow:0 0 
 // ===== STATE =====
 let state = {
   teacherMode: false,
-  teacherAccessAllowed: false,
   settings: {
     essayQuestion: '',
     audience: 'teacher',
@@ -1249,12 +1248,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
 const MEMORY_STORAGE = {};
 let hubStorageNamespace = 'anonymous';
+let hubStaffAccess = false;
 
 function storageKey(name) {
   return `igcse0511:${hubStorageNamespace}:${name}`;
 }
 
-function setHubStorageNamespace(namespace) {
+function applyHubStorageNamespace(namespace) {
   const clean = String(namespace || '').trim().replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 96);
   if (!clean || clean === hubStorageNamespace) return;
   hubStorageNamespace = clean;
@@ -1263,7 +1263,25 @@ function setHubStorageNamespace(namespace) {
   applySettings();
   updateAll();
 }
-window.setHubStorageNamespace = setHubStorageNamespace;
+
+function hasHubStaffAccess() {
+  return hubStaffAccess === true && window.parent !== window;
+}
+
+window.addEventListener('message', function(event) {
+  if (window.parent === window) return;
+  if (event.source !== window.parent) return;
+  if (event.origin !== window.location.origin) return;
+  const data = event.data;
+  if (!data || data.type !== 'essay-hub-context') return;
+
+  applyHubStorageNamespace(data.storageNamespace);
+  hubStaffAccess = data.staffAccess === true;
+  if (!hubStaffAccess) state.teacherMode = false;
+  const btn = document.getElementById('btnTeacherToggle');
+  if (btn) btn.style.display = hubStaffAccess ? '' : 'none';
+  applyTeacherUI();
+});
 
 function safeStorageGet(key) {
   try {
@@ -1308,7 +1326,6 @@ function loadState() {
       state = deepMerge(state, parsed);
       // Staff access is granted only by the authenticated Self-Study Hub wrapper.
       state.teacherMode = false;
-      state.teacherAccessAllowed = false;
     }
   } catch(e) { console.warn('Load failed:', e); }
 }
@@ -1668,7 +1685,9 @@ function switchTab(tab) {
 
 // ===== TEACHER MODE =====
 function toggleTeacherMode() {
-  if (!state.teacherAccessAllowed) {
+  if (!hasHubStaffAccess()) {
+    state.teacherMode = false;
+    applyTeacherUI();
     showToast('Teacher tools are available through the authenticated Self-Study Hub.');
     return;
   }
@@ -1677,21 +1696,15 @@ function toggleTeacherMode() {
   showToast(state.teacherMode ? 'Teacher tools opened' : 'Switched to Student Mode');
 }
 
-function setHubStaffAccess(allowed) {
-  state.teacherAccessAllowed = allowed === true;
-  if (!state.teacherAccessAllowed) state.teacherMode = false;
-  const btn = document.getElementById('btnTeacherToggle');
-  if (btn) btn.style.display = state.teacherAccessAllowed ? '' : 'none';
-  applyTeacherUI();
-}
-window.setHubStaffAccess = setHubStaffAccess;
-
 function applyTeacherUI() {
   const btn = document.getElementById('btnTeacherToggle');
   const tabT = document.getElementById('tabTeacher');
   const tabA = document.getElementById('tabAnalytics');
   const fbCard = document.getElementById('teacherFeedbackCard');
-  if (state.teacherMode) {
+  const allowed = hasHubStaffAccess();
+  if (!allowed) state.teacherMode = false;
+  if (btn) btn.style.display = allowed ? '' : 'none';
+  if (state.teacherMode && allowed) {
     btn.classList.add('active');
     btn.textContent = 'Student Mode';
     tabT.style.display = '';
