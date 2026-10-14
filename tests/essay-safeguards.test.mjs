@@ -79,3 +79,29 @@ test('Exam mode has a fresh-attempt path and mode switching does not silently ke
 test('Practice mode keeps Review and Preview available before submission', () => {
   assert.match(html, /state\.studyMode\s*!==\s*['"]exam['"]/);
 });
+
+test('controlled tasks can only be applied from validated Hub context', () => {
+  assert.match(html, /controlledTaskId:\s*['"]/);
+  assert.match(html, /function\s+applyControlledTask\s*\(/);
+  assert.match(html, /data\.controlledTask[\s\S]*applyControlledTask\(data\.controlledTask\)/);
+  assert.match(html, /applyControlledTask[\s\S]*controlledTaskId[\s\S]*studyMode[\s\S]*settings/);
+});
+
+test('controlled task mode cannot be changed locally by the student', () => {
+  assert.match(html, /function\s+setStudyMode[\s\S]*state\.controlledTaskId[\s\S]*return/);
+  assert.match(html, /Mode is set by your teacher/);
+});
+
+test('ordinary Base64 shared links are explicitly Practice and never controlled', () => {
+  assert.match(html, /function\s+applySharedTaskFromUrl[\s\S]*state\.controlledTaskId\s*=\s*['"]["']?;/);
+  assert.match(html, /function\s+applySharedTaskFromUrl[\s\S]*state\.studyMode\s*=\s*['"]practice['"]/);
+  assert.doesNotMatch(html, /payload\s*=\s*\{[\s\S]{0,180}controlledTaskId/);
+});
+
+test('staff can request a server-backed controlled Exam link through the Hub parent', () => {
+  assert.match(html, /function\s+requestControlledTaskLink\s*\(/);
+  assert.match(html, /requestControlledTaskLink[\s\S]*hasHubStaffAccess\(\)/);
+  assert.match(html, /essay-create-controlled-task/);
+  assert.match(html, /studyMode:\s*['"]exam['"]/);
+  assert.match(html, /id=['"]btnControlledTaskLink['"]/);
+});
