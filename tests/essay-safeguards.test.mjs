@@ -55,10 +55,17 @@ test('Essay state persists Practice or Exam mode and submission state', () => {
   assert.match(html, /function\s+updateModeUI\s*\(/);
 });
 
-test('unfinished Exam blocks Review and Preview without rendering analysis', () => {
-  assert.match(html, /function\s+switchTab[\s\S]*state\.studyMode\s*===\s*['"]exam['"][\s\S]*!state\.examSubmitted[\s\S]*review[\s\S]*preview/);
+test('unfinished Exam blocks Review, Preview, and Saved Drafts without rendering analysis', () => {
+  assert.match(html, /function\s+switchTab[\s\S]*state\.studyMode\s*===\s*['"]exam['"][\s\S]*!state\.examSubmitted[\s\S]*review[\s\S]*preview[\s\S]*drafts/);
   assert.match(html, /function\s+updateAll[\s\S]*state\.studyMode\s*===\s*['"]exam['"][\s\S]*!state\.examSubmitted[\s\S]*clearReviewOutputs\(\)[\s\S]*return/);
   assert.match(html, /function\s+clearReviewOutputs\s*\(/);
+  assert.match(html, /id=['"]tabDrafts['"]/);
+});
+
+test('saved draft import and save are blocked during unfinished Exam', () => {
+  assert.match(html, /function\s+loadDraft\s*\([\s\S]*state\.studyMode\s*===\s*['"]exam['"][\s\S]*!state\.examSubmitted[\s\S]*return/);
+  assert.match(html, /function\s+saveDraft\s*\([\s\S]*state\.studyMode\s*===\s*['"]exam['"][\s\S]*!state\.examSubmitted[\s\S]*return/);
+  assert.match(html, /function\s+updateModeUI[\s\S]*tabDrafts[\s\S]*aria-disabled/);
 });
 
 test('Exam submission requires all four essay sections and then locks editing', () => {
