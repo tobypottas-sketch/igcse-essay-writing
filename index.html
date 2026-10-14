@@ -1770,7 +1770,7 @@ function applyCommentBank() {
 function switchTab(tab) {
   if (state.studyMode === 'exam' && tab === 'drafts') {
     showToast('Saved Drafts are unavailable in Exam Mode.');
-    return;
+    return false;
   }
   if (state.studyMode === 'exam' && !state.examSubmitted && (tab === 'review' || tab === 'preview')) {
     showToast('Review and Preview unlock after you submit a complete essay.');
@@ -2511,7 +2511,7 @@ function saveDraft() {
     return;
   }
   const name = gv('saveDraftName').trim();
-  if (!name) { showToast('Please enter a draft name.'); return; }
+  if (!name) { showToast('Please enter a draft name.'); return false; }
   gatherUIState();
   let drafts = getDrafts();
   const draft = {
@@ -2528,6 +2528,7 @@ function saveDraft() {
   sv('saveDraftName', '');
   renderDraftsList();
   showToast('Draft saved: ' + name);
+  return true;
 }
 
 function getDrafts() {
