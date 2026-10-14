@@ -2,7 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 
-const html = fs.readFileSync('index.html','utf8');
+const html = fs.readFileSync('essay-app.html','utf8');
+const css = fs.readFileSync('scripts/essay-suite-refresh.css','utf8');
 
 test('public app has no embedded teacher password', () => {
   assert.equal(html.includes('NKCS1234'), false);
@@ -20,9 +21,9 @@ test('teacher controls are hidden until Hub grants staff access', () => {
 
 test('Essay app uses Cambridge suite branding', () => {
   assert.match(html, /cambridge-english-header\.png/);
-  assert.match(html, /CAMBRIDGE SUITE VISUAL REFRESH/);
-  assert.match(html, /--teal:/);
-  assert.match(html, /--rose:/);
+  assert.match(css, /CAMBRIDGE SUITE VISUAL REFRESH/);
+  assert.match(css, /--teal:/);
+  assert.match(css, /--plum:/);
 });
 
 test('student empty-task guidance does not invite Teacher Mode', () => {

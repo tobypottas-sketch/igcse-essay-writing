@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 
-const html = fs.readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+const html = fs.readFileSync(new URL('../essay-app.html', import.meta.url), 'utf8');
 
 function functionSource(name, nextName){
   const start = html.indexOf(`function ${name}(`);
