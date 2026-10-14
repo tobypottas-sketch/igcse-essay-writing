@@ -2508,7 +2508,7 @@ function copyTeacherNotes() {
 function saveDraft() {
   if (state.studyMode === 'exam') {
     showToast('Saved Drafts are unavailable in Exam Mode.');
-    return;
+    return false;
   }
   const name = gv('saveDraftName').trim();
   if (!name) { showToast('Please enter a draft name.'); return false; }
