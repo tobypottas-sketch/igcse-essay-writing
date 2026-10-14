@@ -16,7 +16,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: node .github/scripts/apply-essay-embedded-init.mjs
+      - run: node .github/scripts/apply-essay-full-exam-draft-lock.mjs
       - run: node --test tests/essay-safeguards.test.mjs
       - name: Commit generated safeguard changes
         run: |
@@ -27,5 +27,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add index.html
-          git commit -m "fix: wait for Hub identity before Essay local state"
+          git commit -m "fix: lock Saved Drafts for entire Essay Exam"
           git push
