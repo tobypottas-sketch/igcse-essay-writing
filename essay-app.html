@@ -1556,16 +1556,8 @@ function openStudentTaskPreview() {
 
 function readSharedTaskFromUrl() {
   let encoded = '';
-  try {
-    const params = new URLSearchParams(window.location.search || '');
-    encoded = params.get('task') || '';
-  } catch (e) {}
-
-  // Backward-compatible fallback if a fragment-based task link is ever used.
-  if (!encoded) {
-    const hash = window.location.hash || '';
-    if (hash.indexOf('#task=') === 0) encoded = hash.slice(6);
-  }
+  const hash = window.location.hash || '';
+  if (hash.indexOf('#task=') === 0) encoded = hash.slice(6);
 
   if (!encoded) return null;
 
