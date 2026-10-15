@@ -6,6 +6,7 @@ on:
       - main
       - feat/essay-writing-safeguards
       - fix/fourth-hardening-audit-20261014
+      - audit/eighth-hardening-20261015
   pull_request:
     branches:
       - main
