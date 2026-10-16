@@ -1,0 +1,17 @@
+name: Runtime Smoke
+on:
+  push:
+    branches: [main]
+jobs:
+  browser-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --no-save --package-lock=false @playwright/test@1.56.1
+      - run: npx playwright install chromium
+      - name: Start local app
+        run: python3 -m http.server 4173 >/tmp/igcse-essay-http.log 2>&1 &
+      - run: npx playwright test tests/runtime-smoke.spec.mjs --reporter=line
