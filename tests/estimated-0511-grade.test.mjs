@@ -12,3 +12,5 @@ test('Essay results shows an honest 0511 R&W grade band rather than pretending e
   assert.match(html, /Component 12 combines reading and writing/i);
   assert.match(html, /not an official Cambridge result/i);
 });
+
+// Regression guard for honest essay-only grade-band wording.
