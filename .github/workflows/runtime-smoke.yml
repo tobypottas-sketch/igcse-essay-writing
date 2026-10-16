@@ -1,7 +1,7 @@
 name: Runtime Smoke
 on:
   push:
-    branches: [main, audit/ninth-runtime-smoke-20261016]
+    branches: [main]
 jobs:
   browser-smoke:
     runs-on: ubuntu-latest
