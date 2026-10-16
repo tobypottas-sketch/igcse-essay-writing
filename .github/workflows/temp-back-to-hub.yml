@@ -17,7 +17,7 @@ jobs:
           python - <<'PY'
           from pathlib import Path
           import re
-          path = Path('index.html')
+          path = Path('essay-app.html')
           text = path.read_text(encoding='utf-8')
           if 'class="hub-return-link"' in text:
               raise SystemExit('Back to Hub control already exists')
@@ -35,6 +35,6 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add index.html
+          git add essay-app.html
           git commit -m "Add Back to Hub navigation"
           git push origin HEAD:feat/back-to-hub-20261016
