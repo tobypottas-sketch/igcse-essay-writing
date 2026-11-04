@@ -909,7 +909,9 @@ textarea:focus,input:focus,select:focus{border-color:var(--teal);box-shadow:0 0 
       <div class="section-wc" id="sectionWc"></div>
     </div>
 
-    <!-- Drafting sections -->
+    <!-- Drafting sections: one focused writing surface, same four saved fields -->
+    <div class="draft-paper" aria-label="Essay draft workspace">
+      <div class="draft-paper-heading"><span class="draft-paper-eyebrow">YOUR ESSAY</span><h2>Build your draft</h2><p>Write one paragraph at a time. Your work is saved as you go.</p></div>
     <div class="card">
       <div class="card-header"><div class="card-header-left"><div class="accent-bar"></div><h3>Introduction</h3></div></div>
       <div class="card-body">
@@ -948,6 +950,8 @@ textarea:focus,input:focus,select:focus{border-color:var(--teal);box-shadow:0 0 
         <textarea id="draftConc" rows="3" oninput="onDraftInput()" placeholder="Summarise your position. Do not introduce new ideas..."></textarea>
         <div style="text-align:right;margin-top:4px;font-size:0.72rem;color:#999;" id="wcConc">0 words</div>
       </div>
+    </div>
+
     </div>
 
     <div class="btn-group no-print" id="draftActionGroup" style="justify-content:center;margin-top:16px;">
