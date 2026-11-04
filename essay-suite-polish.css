@@ -121,3 +121,125 @@ body { font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFon
   .header-right > .hub-return-link,.header-right > .header-badge,.header-right > .autosave-indicator,.header-right > .study-mode-toggle,.header-right > #btnTeacherToggle { grid-column:1;grid-row:auto; }
 }
 @media(prefers-reduced-motion:reduce){.tab-nav .tab-btn,.header-right .btn-mode{transition:none}}
+
+/* Essay Plan: focused four-stage workspace, not a page-long form. */
+#panel-plan { max-width:1120px; margin:0 auto; }
+#panel-plan .essay-plan-card {
+  overflow:hidden;
+  border:1px solid #d7e6eb;
+  border-radius:20px;
+  background:#fff;
+  box-shadow:0 10px 35px rgba(23,56,82,.06);
+}
+#panel-plan .essay-plan-card > .card-header {
+  padding:19px 25px;
+  background:#f8fbfb;
+}
+#panel-plan .essay-plan-card > .card-body { padding:22px 25px 26px; }
+#panel-plan .essay-plan-intro {
+  margin:0 0 22px;
+  color:#526b76;
+  font-size:.95rem;
+  line-height:1.6;
+}
+#panel-plan .essay-plan-stages { display:grid; gap:16px; }
+#panel-plan .essay-plan-stage {
+  min-width:0;
+  border:1px solid #dce9ea;
+  background:#fbfdfd;
+  border-radius:16px;
+  padding:18px 20px 19px;
+}
+#panel-plan .essay-plan-stage-heading {
+  display:flex;
+  align-items:center;
+  gap:13px;
+  padding-bottom:15px;
+  margin-bottom:16px;
+  border-bottom:1px solid #e1edec;
+}
+#panel-plan .essay-plan-stage-number {
+  display:grid;
+  place-items:center;
+  flex:0 0 38px;
+  height:38px;
+  border-radius:12px;
+  background:#e7f5f3;
+  color:#137e80;
+  font-size:.8rem;
+  font-weight:850;
+  letter-spacing:.04em;
+}
+#panel-plan .essay-plan-stage-heading h4 {
+  margin:0;
+  color:#173852;
+  font-size:1.05rem;
+  font-weight:800;
+  line-height:1.35;
+}
+#panel-plan .essay-plan-stage-heading p {
+  margin:3px 0 0;
+  color:#57717d;
+  font-size:.85rem;
+}
+#panel-plan .essay-plan-fields {
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:17px;
+}
+#panel-plan .essay-plan-fields .form-row { min-width:0;margin:0; }
+#panel-plan .essay-plan-fields label {
+  margin-bottom:9px;
+  color:#253d49;
+  font-weight:750;
+  font-size:.91rem;
+  line-height:1.45;
+}
+#panel-plan .essay-plan-fields textarea {
+  display:block;
+  min-height:104px;
+  height:104px;
+  padding:12px 14px;
+  border:1px solid #cadfe0;
+  border-radius:12px;
+  background:#fff;
+  font-size:.925rem;
+  line-height:1.5;
+  resize:vertical;
+}
+#panel-plan .essay-plan-fields textarea:focus-visible {
+  border-color:#137e80;
+  outline:3px solid rgba(19,126,128,.18);
+  outline-offset:1px;
+  box-shadow:none;
+}
+#panel-plan .essay-plan-stage--final .essay-plan-fields { grid-template-columns:1fr; }
+#panel-plan .essay-plan-stage--final .form-row { max-width:700px; }
+#panel-plan .essay-plan-actions {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:14px;
+  margin-top:23px;
+  padding-top:21px;
+  border-top:1px solid #e0ebeb;
+}
+#panel-plan .essay-plan-actions span { color:#526b76;font-size:.9rem; }
+#panel-plan .essay-plan-actions .btn {
+  min-height:46px;
+  border-radius:11px;
+  padding:11px 20px;
+  background:#137e80;
+  font-size:.94rem;
+}
+@media (max-width:800px) {
+  #panel-plan .essay-plan-fields { grid-template-columns:1fr; }
+  #panel-plan .essay-plan-card > .card-body { padding:17px; }
+  #panel-plan .essay-plan-stage { padding:16px; }
+}
+@media (max-width:480px) {
+  #panel-plan .essay-plan-card > .card-header { padding:16px; }
+  #panel-plan .essay-plan-stage-heading { align-items:flex-start;gap:10px; }
+  #panel-plan .essay-plan-actions .btn { width:100%;justify-content:center; }
+}
