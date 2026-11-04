@@ -817,10 +817,15 @@ textarea:focus,input:focus,select:focus{border-color:var(--teal);box-shadow:0 0 
 
   <!-- ========== TAB: PLAN ========== -->
   <div class="tab-panel" id="panel-plan">
-    <div class="card">
+    <div class="card essay-plan-card">
       <div class="card-header"><div class="card-header-left"><div class="accent-bar"></div><h3>Essay Planning</h3></div></div>
       <div class="card-body">
-        <p style="font-size:0.85rem;color:#666;margin-bottom:16px;">Answer these questions to organise your ideas before writing. You do not need to write full sentences here.</p>
+        <p class="essay-plan-intro">Build your argument in four short steps. Use notes and key ideas — full sentences are not necessary yet.</p>
+
+        <div class="essay-plan-stages">
+          <section class="essay-plan-stage" aria-label="Step 1: Understand the task">
+            <div class="essay-plan-stage-heading"><span class="essay-plan-stage-number">01</span><div><h4>Understand the task</h4><p>Identify the question and your position.</p></div></div>
+            <div class="essay-plan-fields">
 
         <div class="form-row">
           <label for="planQ1">What is the exact question asking you to do?</label>
@@ -830,6 +835,11 @@ textarea:focus,input:focus,select:focus{border-color:var(--teal);box-shadow:0 0 
           <label for="planQ2">What is your overall opinion or position?</label>
           <textarea id="planQ2" rows="2" oninput="onPlanInput()" placeholder="e.g. I believe that... / I think both sides have valid points..."></textarea>
         </div>
+            </div>
+          </section>
+          <section class="essay-plan-stage" aria-label="Step 2: Develop your argument">
+            <div class="essay-plan-stage-heading"><span class="essay-plan-stage-number">02</span><div><h4>Develop your argument</h4><p>Give a reason and support it with an example.</p></div></div>
+            <div class="essay-plan-fields">
         <div class="form-row">
           <label for="planQ3">What is one strong reason for your view?</label>
           <textarea id="planQ3" rows="2" oninput="onPlanInput()" placeholder="Your first main argument..."></textarea>
@@ -838,6 +848,11 @@ textarea:focus,input:focus,select:focus{border-color:var(--teal);box-shadow:0 0 
           <label for="planQ4">What example or explanation supports that reason?</label>
           <textarea id="planQ4" rows="2" oninput="onPlanInput()" placeholder="A specific example, fact, or personal experience..."></textarea>
         </div>
+            </div>
+          </section>
+          <section class="essay-plan-stage" aria-label="Step 3: Consider another view">
+            <div class="essay-plan-stage-heading"><span class="essay-plan-stage-number">03</span><div><h4>Consider another view</h4><p>Explore the opposite view and your response.</p></div></div>
+            <div class="essay-plan-fields">
         <div class="form-row">
           <label for="planQ5">What is the opposite point of view?</label>
           <textarea id="planQ5" rows="2" oninput="onPlanInput()" placeholder="What would someone who disagrees say?"></textarea>
@@ -846,9 +861,17 @@ textarea:focus,input:focus,select:focus{border-color:var(--teal);box-shadow:0 0 
           <label for="planQ6">How will you respond to that opposite view?</label>
           <textarea id="planQ6" rows="2" oninput="onPlanInput()" placeholder="Do you accept part of it? Argue against it?"></textarea>
         </div>
+            </div>
+          </section>
+          <section class="essay-plan-stage essay-plan-stage--final" aria-label="Step 4: Finish your plan">
+            <div class="essay-plan-stage-heading"><span class="essay-plan-stage-number">04</span><div><h4>Finish your plan</h4><p>Decide how you will conclude.</p></div></div>
+            <div class="essay-plan-fields">
         <div class="form-row">
           <label for="planQ7">What will you say in your conclusion?</label>
           <textarea id="planQ7" rows="2" oninput="onPlanInput()" placeholder="Summarise your position clearly..."></textarea>
+        </div>
+            </div>
+          </section>
         </div>
 
         <div id="modelPhrasesSection" style="display:none;margin-top:20px;">
@@ -861,9 +884,7 @@ textarea:focus,input:focus,select:focus{border-color:var(--teal);box-shadow:0 0 
           </div>
         </div>
 
-        <div style="text-align:center;margin-top:20px;">
-          <button class="btn btn-primary" onclick="switchTab('draft')">Start Drafting &rarr;</button>
-        </div>
+        <div class="essay-plan-actions"><span>Ready to turn your ideas into paragraphs?</span><button class="btn btn-primary" onclick="switchTab('draft')">Start Drafting &rarr;</button></div>
       </div>
     </div>
   </div>
