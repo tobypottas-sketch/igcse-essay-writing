@@ -385,3 +385,207 @@ body { font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFon
   #panel-draft .section-wc-item { flex:1 1 95px; }
   #panel-draft #draftActionGroup { justify-content:stretch !important; }
 }
+
+/* Review, preview and saved drafts: final writing-workspace polish. */
+#panel-review,#panel-preview,#panel-drafts {
+  max-width:1040px;
+  margin:0 auto;
+}
+#panel-review > .card,#panel-preview > .card,#panel-drafts > .card {
+  margin-bottom:16px;
+  border:1px solid #d9e7e8;
+  border-radius:17px;
+  background:#fff;
+  box-shadow:0 5px 22px rgba(23,56,82,.045);
+  overflow:hidden;
+}
+#panel-review > .card > .card-header,
+#panel-preview > .card > .card-header,
+#panel-drafts > .card > .card-header {
+  padding:16px 22px;
+  border-bottom:1px solid #e3ecec;
+  background:#fbfdfd;
+}
+#panel-review > .card > .card-body,
+#panel-preview > .card > .card-body,
+#panel-drafts > .card > .card-body { padding:20px 22px; }
+#panel-review .card-header h3,#panel-preview .card-header h3,#panel-drafts .card-header h3 {
+  font-size:1.05rem;
+  color:#173852;
+}
+#panel-review .perf-grid { grid-template-columns:repeat(2,minmax(0,1fr));gap:12px; }
+#panel-review .perf-card {
+  padding:14px 18px;
+  background:#f8fbfb;
+  border:1px solid #dce9ea;
+  border-radius:12px;
+  text-align:left;
+}
+#panel-review .perf-card .perf-label {
+  margin:0 0 5px;
+  color:#617685;
+  font-size:.72rem;
+  font-weight:750;
+  letter-spacing:.035em;
+}
+#panel-review .perf-card .perf-value {
+  min-height:27px;
+  font-size:1.35rem;
+  color:#234454;
+}
+#panel-review .perf-card .perf-value.limited { color:#b04e54; }
+#panel-review .perf-card .perf-value.sound { color:#986e25; }
+#panel-review .perf-card .perf-value.strong { color:#267458; }
+#panel-review .perf-grade-card {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-top:12px;
+  padding:14px 18px;
+  background:#f2f9f8;
+  border-color:#cfe6e3;
+}
+#panel-review .perf-grade-card .perf-label { margin:0;font-size:.79rem; }
+#panel-review .perf-grade-card .perf-value { font-size:1.32rem; }
+#panel-review .perf-disclaimer {
+  margin:12px 0 0;
+  padding:10px 12px;
+  background:#f7f9fa;
+  color:#637781;
+  border:1px solid #e2e9ea;
+  border-radius:10px;
+  text-align:left;
+  font-size:.78rem;
+  font-style:normal;
+  line-height:1.5;
+}
+#panel-review .check-grid { gap:18px; }
+#panel-review .check-section h4 { color:#416270; }
+#panel-review .check-item { padding:8px 0; }
+#panel-review > .btn-group { justify-content:flex-end !important; }
+#panel-preview > .card > .card-header {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:12px;
+}
+#panel-preview .card-header .btn-group {
+  display:flex;
+  flex-wrap:wrap;
+  gap:7px;
+}
+#panel-preview .card-header .btn-group .btn {
+  min-height:40px;
+  padding:8px 13px;
+  border:1px solid #d4e4e5;
+  border-radius:10px;
+  background:#fff;
+  color:#35505c;
+  font-size:.83rem;
+}
+#panel-preview .card-header .btn-group .btn:hover { background:#edf7f6;border-color:#a9d6d2; }
+#panel-preview .card-header .btn-group .btn:first-child {
+  background:#137e80;
+  border-color:#137e80;
+  color:#fff;
+}
+#panel-preview .card-header .btn-group .btn:first-child:hover { background:#0e5f61; }
+#panel-preview > .card > .card-body { padding:24px; background:#f9fbfb; }
+#panel-preview #essayPreview {
+  max-width:730px;
+  margin:0 auto;
+  min-height:180px;
+  padding:34px 42px;
+  border:1px solid #d7e4e5;
+  border-radius:12px;
+  background:#fff;
+  box-shadow:0 5px 17px rgba(23,56,82,.04);
+  font-size:1.02rem;
+  line-height:1.85;
+}
+#panel-preview #essayPreview:has(> p[style]) {
+  display:grid;
+  place-items:center;
+  min-height:170px;
+  border-style:dashed;
+  background:#fff;
+}
+#panel-preview #essayPreview > p[style] {
+  color:#637984 !important;
+  font-size:.94rem;
+  font-style:normal !important;
+  text-align:center;
+}
+#panel-drafts {
+  display:none;
+  grid-template-columns:minmax(280px, .9fr) minmax(0,1.1fr);
+  gap:16px;
+  align-items:start;
+}
+#panel-drafts.active { display:grid; }
+#panel-drafts > .card { margin:0; }
+#panel-drafts > .card:nth-child(3) { grid-column:1 / -1; }
+#panel-drafts > .card:nth-child(3) > .card-header { padding:12px 20px; }
+#panel-drafts > .card:nth-child(3) > .card-body {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:14px;
+  padding:12px 20px;
+}
+#panel-drafts > .card:nth-child(3) > .card-body::before {
+  content:"Only clear your current writing when you want a fresh start. Saved drafts are kept.";
+  color:#607782;
+  font-size:.83rem;
+  line-height:1.4;
+}
+#panel-drafts .form-grid { display:block; }
+#panel-drafts .form-row { margin-bottom:12px; }
+#panel-drafts #saveDraftName {
+  min-height:46px;
+  border-color:#cddfe1;
+  border-radius:10px;
+}
+#panel-drafts .form-grid > div:last-child { justify-content:flex-start; }
+#panel-drafts .form-grid .btn-primary {
+  min-height:42px;
+  padding:10px 18px;
+  border-radius:10px;
+}
+#panel-drafts .drafts-list { max-height:440px;overflow:auto; }
+#panel-drafts .drafts-list > p {
+  padding:32px 15px !important;
+  border:1px dashed #d4e3e5;
+  border-radius:12px;
+  background:#f8fbfb;
+  color:#647c84 !important;
+  text-align:center;
+  font-size:.91rem !important;
+}
+#panel-drafts .draft-item {
+  gap:12px;
+  padding:12px 7px;
+  border-color:#e5eeee;
+}
+#panel-drafts .draft-item-name { color:#173852; }
+#panel-drafts .draft-item-date { color:#647985; }
+#panel-drafts .draft-item-actions .btn { border-radius:9px;min-height:36px; }
+#panel-drafts .btn-danger { background:#fff0f1;color:#9b4d60; }
+#panel-drafts .btn-danger:hover { background:#fbe2e6; }
+@media(max-width:800px) {
+  #panel-drafts.active { grid-template-columns:1fr; }
+  #panel-drafts > .card:nth-child(3) { grid-column:auto; }
+  #panel-review .perf-grid { gap:9px; }
+  #panel-preview #essayPreview { padding:25px; }
+}
+@media(max-width:520px) {
+  #panel-review > .card > .card-body,
+  #panel-preview > .card > .card-body,
+  #panel-drafts > .card > .card-body { padding:16px; }
+  #panel-review .perf-grade-card { align-items:flex-start; }
+  #panel-preview .card-header .btn-group .btn { flex:1 1 auto; }
+  #panel-preview #essayPreview { padding:20px; }
+  #panel-drafts > .card:nth-child(3) > .card-body { align-items:flex-start;flex-direction:column; }
+}
