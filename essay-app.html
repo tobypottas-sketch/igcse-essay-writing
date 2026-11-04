@@ -964,6 +964,12 @@ textarea:focus,input:focus,select:focus{border-color:var(--teal);box-shadow:0 0 
 
   <!-- ========== TAB: REVIEW ========== -->
   <div class="tab-panel essay-review-workspace" id="panel-review">
+    <div class="review-empty-state" id="reviewEmptyState" hidden>
+      <span class="review-empty-step">YOUR NEXT STEP</span>
+      <h2>Your review will appear after you start writing.</h2>
+      <p>Write an introduction and develop your ideas in Draft. Then return here for structure checks, language feedback and a rough classroom estimate.</p>
+      <button class="btn btn-primary" type="button" onclick="switchTab('draft')">Go to Draft &rarr;</button>
+    </div>
     <!-- Performance Estimate -->
     <div class="card">
       <div class="card-header"><div class="card-header-left"><div class="accent-bar"></div><h3>Rough Performance Estimate</h3></div></div>
@@ -2371,7 +2377,26 @@ function getChunks(text, size) {
 function updateAll() {
   updateWordCounts();
   if (state.studyMode === 'exam' && !state.examSubmitted) {
+    setReviewEmptyState(false);
     clearReviewOutputs();
+    return;
+  }
+  // An untouched workspace is not a failed essay.
+  const hasWriting = ['draftIntro','draftArg1','draftArg2','draftConc']
+    .some(id => gv(id).trim().length > 0);
+  setReviewEmptyState(!hasWriting);
+  if (!hasWriting) {
+    const pc = document.getElementById('perfContent');
+    const pl = document.getElementById('perfLanguage');
+    const band = document.getElementById('perfGradeBand');
+    const checks = document.getElementById('checkGrid');
+    const lang = document.getElementById('langFeedback');
+    if (pc) { pc.textContent = '—'; pc.className = 'perf-value'; }
+    if (pl) { pl.textContent = '—'; pl.className = 'perf-value'; }
+    if (band) band.textContent = '—';
+    if (checks) checks.replaceChildren();
+    if (lang) lang.replaceChildren();
+    renderPreview();
     return;
   }
   const analysis = analyzeEssay();
@@ -2379,6 +2404,13 @@ function updateAll() {
   renderLangFeedback(analysis);
   renderPerformance(analysis);
   renderPreview();
+}
+
+function setReviewEmptyState(empty) {
+  const panel = document.getElementById('panel-review');
+  const placeholder = document.getElementById('reviewEmptyState');
+  if (panel) panel.classList.toggle('review-is-empty', empty);
+  if (placeholder) placeholder.hidden = !empty;
 }
 
 function clearReviewOutputs() {
