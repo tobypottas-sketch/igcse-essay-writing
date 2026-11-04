@@ -723,6 +723,7 @@ textarea:focus,input:focus,select:focus{border-color:var(--teal);box-shadow:0 0 
 @media(max-width:700px){.hub-return-link{padding:8px 12px;font-size:.78rem}}
 
 </style>
+<link rel="stylesheet" href="essay-suite-polish.css">
 </head>
 <body>
 
@@ -808,8 +809,9 @@ textarea:focus,input:focus,select:focus{border-color:var(--teal);box-shadow:0 0 
       <div class="card-body" id="scaffoldTipsBody"></div>
     </div>
 
-    <div style="text-align:center;margin-top:20px;">
-      <button class="btn btn-primary" onclick="switchTab('plan')">Start Planning &rarr;</button>
+    <div class="task-actions">
+      <button class="btn btn-primary" id="startPlanningButton" onclick="switchTab('plan')" disabled>Start Planning &rarr;</button>
+      <p class="task-empty-note" id="taskEmptyNote" role="status">Open a task link from your teacher to begin planning your essay.</p>
     </div>
   </div>
 
@@ -1678,7 +1680,16 @@ function applySettings() {
 function applyTaskDisplay() {
   const s = state.settings;
   const qd = document.getElementById('taskQuestionDisplay');
+  const hasEssayQuestion = Boolean(String(s.essayQuestion || '').trim());
   qd.textContent = s.essayQuestion || 'No essay question set yet. Open a shared task link from your teacher.';
+  document.getElementById('taskBanner').classList.toggle('essay-task-empty', !hasEssayQuestion);
+  const planningButton = document.getElementById('startPlanningButton');
+  if (planningButton) {
+    planningButton.disabled = !hasEssayQuestion;
+    planningButton.setAttribute('aria-disabled', String(!hasEssayQuestion));
+  }
+  const emptyNote = document.getElementById('taskEmptyNote');
+  if (emptyNote) emptyNote.hidden = hasEssayQuestion;
 
   const meta = document.getElementById('taskMeta');
   let metaHTML = '';
