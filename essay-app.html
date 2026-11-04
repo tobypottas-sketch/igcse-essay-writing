@@ -708,16 +708,24 @@ textarea:focus,input:focus,select:focus{border-color:var(--teal);box-shadow:0 0 
 </style>
 
 <style>
-/* Shared Self-Study Hub return control */
-.hub-return-bar{max-width:1320px;margin:10px auto 0;padding:0 20px;display:flex;justify-content:flex-end;position:relative;z-index:1200}
-.hub-return-link{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border:1px solid #b9dedd;border-radius:999px;background:#fff;color:#176f70;text-decoration:none;font:700 .82rem/1.2 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;box-shadow:0 2px 8px rgba(25,72,75,.08);transition:background .15s,border-color .15s,transform .15s}
+/* Hub navigation lives inside the existing app header; no separate top row. */
+.hub-return-link{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  width:max-content;padding:8px 14px;border:1px solid #b9dedd;border-radius:999px;
+  background:#fff;color:#176f70;text-decoration:none;
+  font:700 .82rem/1.2 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
+  box-shadow:0 2px 8px rgba(25,72,75,.08);
+  transition:background .15s,border-color .15s;
+}
 .hub-return-link:hover{background:#eaf8f7;border-color:#88c8c5}
 .hub-return-link:focus-visible{outline:3px solid rgba(20,155,150,.22);outline-offset:2px}
-@media(max-width:700px){.hub-return-bar{margin-top:8px;padding:0 10px}.hub-return-link{padding:8px 12px;font-size:.78rem}}
+.header-right > .hub-return-link{flex-shrink:0;margin-left:4px} 
+@media(max-width:700px){.hub-return-link{padding:8px 12px;font-size:.78rem}}
+
 </style>
 </head>
 <body>
-<div class="hub-return-bar" aria-label="Hub navigation"><a class="hub-return-link" href="https://tobypottas-sketch.github.io/igcse-self-study-hub/" target="_top" rel="noopener">← Back to Hub</a></div>
+
 
 
 <noscript>
@@ -740,6 +748,7 @@ textarea:focus,input:focus,select:focus{border-color:var(--teal);box-shadow:0 0 
       </div>
     </div>
     <div class="header-right">
+      <a class="hub-return-link" href="https://tobypottas-sketch.github.io/igcse-self-study-hub/" target="_top" rel="noopener">← Back to Hub</a>
       <span class="header-badge">Cambridge IGCSE 0511</span>
       <span class="autosave-indicator no-print" title="Autosave status"><span class="autosave-dot saved" id="autosaveDot"></span><span id="autosaveLabel" style="font-size:0.7rem;opacity:0.8;">Saved</span></span>
       <div class="study-mode-toggle no-print" id="studyModeToggle" aria-label="Study mode">
