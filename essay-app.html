@@ -2512,7 +2512,7 @@ function buildWritingTargets({ intro, arg1, arg2, conc, total, question, wordMin
   if (targets.length < 3 && countWords(arg2) >= 5) {
     add({ kind:'self-check', area:'Argument 2', field:'draftArg2',
       title:'Check the second argument',
-      detail: /\\b(however|although|nevertheless|on the other hand|whereas)\\b/i.test(arg2)
+      detail: /\b(however|although|nevertheless|on the other hand|whereas)\b/i.test(arg2)
         ? 'A contrast expression is present. Check that the opposite view is explained fairly and that your response is clear.'
         : 'Check that this paragraph offers a distinct point or clearly addresses another viewpoint.',
       action:'Compare it with Argument 1. State what new idea it adds, then explain its importance.' });
