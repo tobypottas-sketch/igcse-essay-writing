@@ -972,29 +972,35 @@ textarea:focus,input:focus,select:focus{border-color:var(--teal);box-shadow:0 0 
     </div>
     <!-- Performance Estimate -->
     <div class="card review-performance-card">
-      <div class="card-header"><div class="card-header-left"><div class="accent-bar"></div><h3>Rough Performance Estimate</h3></div></div>
+      <div class="card-header"><div class="card-header-left"><div class="accent-bar"></div><h3>Writing Snapshot</h3></div></div>
       <div class="card-body">
         <div class="perf-grid" id="perfGrid">
           <div class="perf-card">
-            <div class="perf-label">Content / Message</div>
+            <div class="perf-label">Word count</div>
             <div class="perf-value" id="perfContent">—</div>
           </div>
           <div class="perf-card">
-            <div class="perf-label">Language</div>
+            <div class="perf-label">Sections started</div>
             <div class="perf-value" id="perfLanguage">—</div>
           </div>
         </div>
         <div class="perf-card perf-grade-card">
-          <div class="perf-label">Estimated 0511 R&W grade band</div>
+          <div class="perf-label">Task relevance</div>
           <div class="perf-value" id="perfGradeBand">—</div>
         </div>
       </div>
     </div>
-    <p class="review-estimate-note">Classroom guidance only: these pattern-based estimates are not official Cambridge marks or predicted grades.</p>
+    <p class="review-estimate-note">These are basic writing observations, not an assessment of Cambridge quality. Your teacher can evaluate relevance, development and language.</p>
+
+    <!-- Suggestions -->
+    <div class="card review-priority-card">
+      <div class="card-header"><div class="card-header-left"><div class="accent-bar"></div><h3>Suggestions for Improvement</h3></div></div>
+      <div class="card-body"><ol class="review-priorities" id="reviewPriorities"></ol></div>
+    </div>
 
     <!-- Checks -->
     <div class="card">
-      <div class="card-header"><div class="card-header-left"><div class="accent-bar"></div><h3>Essay Checks</h3></div></div>
+      <div class="card-header"><div class="card-header-left"><div class="accent-bar"></div><h3>Writing Observations</h3></div></div>
       <div class="card-body">
         <div class="check-grid" id="checkGrid"></div>
       </div>
@@ -1002,7 +1008,7 @@ textarea:focus,input:focus,select:focus{border-color:var(--teal);box-shadow:0 0 
 
     <!-- Language Warnings -->
     <div class="card">
-      <div class="card-header"><div class="card-header-left"><div class="accent-bar"></div><h3>Language &amp; Style Feedback</h3></div></div>
+      <div class="card-header"><div class="card-header-left"><div class="accent-bar"></div><h3>Language Features Noticed</h3></div></div>
       <div class="card-body" id="langFeedback">
         <p style="color:#999;font-size:0.85rem;">Write your essay draft to see language feedback here.</p>
       </div>
@@ -2304,47 +2310,24 @@ function analyzeEssay() {
     }
   }
 
-  // ===== PERFORMANCE ESTIMATES =====
-  let contentScore = 0, langScore = 0;
-
-  // Content scoring
-  if (total >= state.settings.wordMin * 0.7) contentScore += 1;
-  if (wcI >= 10) contentScore += 0.5;
-  if (wcA1 >= 15) contentScore += 1;
-  if (wcA2 >= 15) contentScore += 1;
-  if (wcC >= 10) contentScore += 0.5;
-  if (hasOpinion) contentScore += 1;
-  if (hasReasons) contentScore += 1;
-  if (hasExamples) contentScore += 1;
-  if (developedNotListed) contentScore += 1;
-  if (arg1Sentences >= 3) contentScore += 0.5;
-  if (arg2Sentences >= 3) contentScore += 0.5;
-  const passChecks = checks.structure.filter(c => c.status === 'pass').length + checks.task.filter(c => c.status === 'pass').length;
-  contentScore += passChecks * 0.3;
-
-  // Language scoring
-  if (foundContractions.length === 0 && total > 20) langScore += 1.5;
-  if (foundChatty.length === 0 && total > 20) langScore += 1.5;
-  if (foundExag.length === 0 && total > 20) langScore += 1;
-  if (foundLinking.length >= 3) langScore += 1.5;
-  if (foundLinking.length >= 5) langScore += 0.5;
-  if (foundComplex.length >= 2) langScore += 1.5;
-  if (foundComplex.length >= 4) langScore += 0.5;
-  if (foundOpinion.length >= 2) langScore += 1;
-  if (mechCount < 3) langScore += 0.5;
-  const warnCount = langWarnings.filter(w => w.type === 'warn').length;
-  langScore -= warnCount * 0.3;
-
-  let contentLabel = 'Limited', langLabel = 'Limited';
-  if (total < 20) { contentLabel = '—'; langLabel = '—'; }
-  else {
-    if (contentScore >= 7) contentLabel = 'Strong';
-    else if (contentScore >= 4) contentLabel = 'Sound';
-    if (langScore >= 5) langLabel = 'Strong';
-    else if (langScore >= 2.5) langLabel = 'Sound';
-  }
-
-  state.lastAnalysis = { checks, langWarnings, contentLabel, langLabel, total, contentScore, langScore };
+  // Descriptive feedback only: word and phrase patterns cannot award marks.
+  const priorities = [];
+  if (wcI < 5 || (wcA1 < 5 && wcA2 < 5) || wcC < 5)
+    priorities.push('Complete the introduction, main argument and conclusion before reviewing.');
+  if (!question) priorities.push('No essay question is assigned, so task relevance cannot be assessed.');
+  else priorities.push('Compare each paragraph with the assigned question to check relevance.');
+  const repetition = langWarnings.find(w => w.msg.startsWith('Repeated vocabulary:'));
+  if (repetition) priorities.push('Consider varying repeated words where it sounds natural: ' + repetition.msg.replace('Repeated vocabulary: ', ''));
+  if (total < state.settings.wordMin)
+    priorities.push('Develop your ideas towards the word-count target with meaningful reasons or examples.');
+  if (!hasExamples) priorities.push('Consider adding a specific example or explanation to support a main point.');
+  if (!hasReasons) priorities.push('Make the reasons for your position explicit.');
+  if (!priorities.length)
+    priorities.push('Check that each main point supports your argument and includes a relevant detail.');
+  state.lastAnalysis = {
+    checks, langWarnings, total, priorities: priorities.slice(0,3),
+    contentLabel: 'Not assessed', langLabel: 'Not assessed'
+  };
   return state.lastAnalysis;
 }
 
@@ -2402,6 +2385,8 @@ function updateAll() {
     const band = document.getElementById('perfGradeBand');
     const checks = document.getElementById('checkGrid');
     const lang = document.getElementById('langFeedback');
+    const priorities = document.getElementById('reviewPriorities');
+    if (priorities) priorities.replaceChildren();
     if (pc) { pc.textContent = '—'; pc.className = 'perf-value'; }
     if (pl) { pl.textContent = '—'; pl.className = 'perf-value'; }
     if (band) band.textContent = '—';
@@ -2413,6 +2398,7 @@ function updateAll() {
   const analysis = analyzeEssay();
   renderChecks(analysis);
   renderLangFeedback(analysis);
+  renderPriorities(analysis);
   renderPerformance(analysis);
   renderPreview();
 }
@@ -2430,6 +2416,8 @@ function clearReviewOutputs() {
   const grid = document.getElementById('checkGrid');
   const lang = document.getElementById('langFeedback');
   const preview = document.getElementById('essayPreview');
+  const priorities = document.getElementById('reviewPriorities');
+  if (priorities) priorities.replaceChildren();
   if (pc) { pc.textContent = '—'; pc.className = 'perf-value'; }
   if (pl) { pl.textContent = '—'; pl.className = 'perf-value'; }
   const grade = document.getElementById('perfGradeBand');
@@ -2441,39 +2429,39 @@ function clearReviewOutputs() {
 
 function renderChecks(a) {
   const grid = document.getElementById('checkGrid');
-  let html = '';
-
-  // Structure
-  html += '<div class="check-section"><h4>Structure</h4>';
-  a.checks.structure.forEach(c => {
-    html += '<div class="check-item"><div class="check-icon ' + c.status + '">' + statusIcon(c.status) + '</div><span>' + esc(c.label) + '</span></div>';
-  });
-  html += '</div>';
-
-  // Task Fulfilment
-  html += '<div class="check-section"><h4>Task Fulfilment</h4>';
-  a.checks.task.forEach(c => {
-    html += '<div class="check-item"><div class="check-icon ' + c.status + '">' + statusIcon(c.status) + '</div><span>' + esc(c.label) + (c.note ? ' <span style="color:#999;font-size:0.75rem;">(' + esc(c.note) + ')</span>' : '') + '</span></div>';
-  });
-  html += '</div>';
-
-  // Development
-  html += '<div class="check-section"><h4>Development Quality</h4>';
-  a.checks.development.forEach(c => {
-    const devClass = c.dev === 'missing' ? 'dev-missing' : c.dev === 'weak' ? 'dev-weak' : c.dev === 'developed' ? 'dev-developed' : 'dev-welldev';
-    const devLabel = c.dev === 'well developed' ? 'Well Developed' : c.dev.charAt(0).toUpperCase() + c.dev.slice(1);
-    html += '<div class="check-item"><div class="check-icon ' + (c.dev === 'missing' ? 'fail' : c.dev === 'weak' ? 'warn' : 'pass') + '">' + statusIcon(c.dev === 'missing' ? 'fail' : c.dev === 'weak' ? 'warn' : 'pass') + '</div><span>' + esc(c.label) + ' <span class="dev-badge ' + devClass + '">' + devLabel + '</span></span></div>';
-  });
-  html += '</div>';
-
-  // Word count summary in checks
-  html += '<div class="check-section"><h4>Word Count</h4>';
-  const total = a.total;
+  const fields = [
+    ['Introduction','draftIntro'],['Main argument 1','draftArg1'],
+    ['Main argument 2','draftArg2'],['Conclusion','draftConc']
+  ];
+  const paragraphs = fields.map(([name,id]) => {
+    const words = countWords(gv(id));
+    const icon = words ? 'pass' : 'info';
+    return '<div class="check-item"><div class="check-icon ' + icon + '">' +
+      (words ? '✓' : 'i') + '</div><span>' + esc(name) + ': ' +
+      words + ' words' + (words ? '' : ' (not started)') + '</span></div>';
+  }).join('');
+  const hasQuestion = Boolean(String(state.settings.essayQuestion || '').trim());
   const min = state.settings.wordMin, max = state.settings.wordMax;
-  html += '<div class="check-item"><div class="check-icon ' + (total >= min && total <= max ? 'pass' : total > 0 ? 'warn' : 'fail') + '">' + statusIcon(total >= min && total <= max ? 'pass' : total > 0 ? 'warn' : 'fail') + '</div><span>Total: ' + total + ' / ' + min + '–' + max + ' target</span></div>';
-  html += '</div>';
-
-  grid.innerHTML = html;
+  const range = a.total >= min && a.total <= max ? 'within target' :
+    a.total < min ? 'below target' : 'above target';
+  grid.innerHTML =
+    '<div class="check-section"><h4>Paragraphs entered</h4>' + paragraphs + '</div>' +
+    '<div class="check-section"><h4>Question and length</h4>' +
+    '<div class="check-item"><div class="check-icon info">i</div><span>' +
+    (hasQuestion ? 'Question provided — relevance needs teacher judgement.' :
+    'Task relevance: Not assessed — no question provided.') + '</span></div>' +
+    '<div class="check-item"><div class="check-icon info">i</div><span>Word count: ' +
+    a.total + ' (' + range + '; target ' + min + '–' + max + ')</span></div></div>';
+}
+function renderPriorities(a) {
+  const list = document.getElementById('reviewPriorities');
+  if (!list) return;
+  list.replaceChildren();
+  (a.priorities || []).slice(0,3).forEach(message => {
+    const item = document.createElement('li');
+    item.textContent = message;
+    list.appendChild(item);
+  });
 }
 
 function renderLangFeedback(a) {
@@ -2490,25 +2478,15 @@ function renderLangFeedback(a) {
   el.innerHTML = html;
 }
 
-function estimateEssayGradeBand(contentLabel, langLabel) {
-  if (contentLabel === '—' || langLabel === '—') return '—';
-  if (contentLabel === 'Strong' && langLabel === 'Strong') return 'A–B';
-  if ((contentLabel === 'Strong' && langLabel === 'Sound') || (contentLabel === 'Sound' && langLabel === 'Strong')) return 'B–C';
-  if (contentLabel === 'Sound' && langLabel === 'Sound') return 'C–D';
-  if ((contentLabel === 'Sound' && langLabel === 'Limited') || (contentLabel === 'Limited' && langLabel === 'Sound')) return 'D–E';
-  return 'F–G';
-}
-
 function renderPerformance(a) {
-  const pc = document.getElementById('perfContent');
-  const pl = document.getElementById('perfLanguage');
-  const clsMap = { 'Limited': 'limited', 'Sound': 'sound', 'Strong': 'strong', '—': '' };
-  pc.textContent = a.contentLabel;
-  pc.className = 'perf-value ' + (clsMap[a.contentLabel] || '');
-  pl.textContent = a.langLabel;
-  pl.className = 'perf-value ' + (clsMap[a.langLabel] || '');
-  const grade = document.getElementById('perfGradeBand');
-  if (grade) grade.textContent = estimateEssayGradeBand(a.contentLabel, a.langLabel);
+  const wordCount = document.getElementById('perfContent');
+  const sections = document.getElementById('perfLanguage');
+  const relevance = document.getElementById('perfGradeBand');
+  const ids = ['draftIntro','draftArg1','draftArg2','draftConc'];
+  const started = ids.filter(id => gv(id).trim()).length;
+  if (wordCount) { wordCount.textContent = String(a.total); wordCount.className = 'perf-value'; }
+  if (sections) { sections.textContent = started + ' / 4'; sections.className = 'perf-value'; }
+  if (relevance) relevance.textContent = 'Not assessed';
 }
 
 function statusIcon(status) {
