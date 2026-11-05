@@ -2314,18 +2314,12 @@ function analyzeEssay() {
   }
 
   // Descriptive feedback only: word and phrase patterns cannot award marks.
-  const priorities = [];
-  if (wcI < 5 || (wcA1 < 5 && wcA2 < 5) || wcC < 5)
-    priorities.push('Complete the introduction, main argument and conclusion before reviewing.');
-  if (question) priorities.push('Compare each paragraph with the assigned question to check relevance.');
-  const repetition = langWarnings.find(w => w.msg.startsWith('Repeated vocabulary:'));
-  if (repetition) priorities.push('Consider varying repeated words where it sounds natural: ' + repetition.msg.replace('Repeated vocabulary: ', ''));
-  if (total < state.settings.wordMin)
-    priorities.push('Develop your ideas towards the word-count target with meaningful reasons or examples.');
-  if (!hasExamples) priorities.push('Consider adding a specific example or explanation to support a main point.');
-  if (!hasReasons) priorities.push('Make the reasons for your position explicit.');
-  if (!priorities.length)
-    priorities.push('Check that each main point supports your argument and includes a relevant detail.');
+  // Evidence-first local feedback: findings cite observable text features;
+  // anything involving quality or relevance is explicitly a self-check.
+  const priorities = buildWritingTargets({
+    intro, arg1, arg2, conc, total, question,
+    wordMin: state.settings.wordMin, wordMax: state.settings.wordMax
+  });
   state.lastAnalysis = {
     checks, langWarnings, total, priorities: priorities.slice(0,3),
     contentLabel: 'Not assessed', langLabel: 'Not assessed'
@@ -2450,15 +2444,127 @@ function renderChecks(a) {
   grid.innerHTML = '<div class="check-section"><h4>Paragraphs entered</h4>' + paragraphs + '</div>';
 }
 
+// Deterministic writing-coach suggestions; no remote requests or text uploads.
+// Every target either references an observed feature or asks the student to verify it.
+function buildWritingTargets({ intro, arg1, arg2, conc, total, question, wordMin, wordMax }) {
+  const sections = [
+    { area:'Introduction', field:'draftIntro', text:intro },
+    { area:'Argument 1', field:'draftArg1', text:arg1 },
+    { area:'Argument 2', field:'draftArg2', text:arg2 },
+    { area:'Conclusion', field:'draftConc', text:conc }
+  ];
+  const targets = [];
+  const add = (target) => { if (targets.length < 3) targets.push(target); };
+  const words = text => (text.toLowerCase().match(/[a-z]+(?:'[a-z]+)?/g) || []);
+  const body = sections.slice(1,3);
+  const missing = sections.filter(s => countWords(s.text) < 5);
+  if (missing.length) {
+    const first = missing[0];
+    add({ kind:'observed', area:first.area, field:first.field,
+      title:'Complete this section',
+      detail: first.area + ' currently has ' + countWords(first.text) + ' words.',
+      action:'Write the key idea first, then explain it clearly in your own words.' });
+  }
+  if (total < wordMin) {
+    const first = body.find(s => countWords(s.text) < 25) || body[0];
+    add({ kind:'observed', area:first.area, field:first.field,
+      title:'Build on your ideas',
+      detail:'The draft is ' + total + ' words; the target begins at ' + wordMin + '.',
+      action:'Add a relevant reason, specific example or explanation—not filler.' });
+  } else if (total > wordMax) {
+    add({ kind:'observed', area:'Argument 1', field:'draftArg1',
+      title:'Edit for concision',
+      detail:'The draft is ' + total + ' words, above the ' + wordMax + '-word target.',
+      action:'Remove repeated explanations while keeping your strongest evidence.' });
+  }
+  // Only flag repeated topic words, not high-frequency function words.
+  const excluded = new Set(['which','their','there','these','those','about','would',
+    'could','should','being','because','people','think','believe','however','although',
+    'firstly','secondly','example','another','really','very','students','school']);
+  const frequencies = new Map();
+  sections.forEach(s => words(s.text).forEach(w => {
+    if (w.length > 4 && !excluded.has(w)) frequencies.set(w,(frequencies.get(w)||0)+1);
+  }));
+  const repeated = [...frequencies.entries()].filter(([w,n]) => n >= 4)
+    .sort((a,b) => b[1]-a[1])[0];
+  if (repeated && targets.length < 3) {
+    const [term,n] = repeated;
+    const inSection = sections.find(s => words(s.text).includes(term)) || body[0];
+    add({ kind:'observed', area:inSection.area, field:inSection.field,
+      title:'Review repeated vocabulary',
+      detail:'The word “' + term + '” appears ' + n + ' times across your draft.',
+      action:'Read each use. Keep the word when precise; otherwise use a suitable alternative or rewrite the sentence.' });
+  }
+  if (targets.length < 3 && countWords(arg1) >= 5) {
+    const hasReason = REASON_MARKERS.some(marker => arg1.toLowerCase().includes(marker));
+    const hasExample = EXAMPLE_MARKERS.some(marker => arg1.toLowerCase().includes(marker));
+    add({ kind:'self-check', area:'Argument 1', field:'draftArg1',
+      title:'Check your first argument',
+      detail: hasReason && hasExample
+        ? 'Reason and example expressions were detected, but the app cannot judge whether they are relevant.'
+        : 'Check that this paragraph explains its point and supports it with a relevant detail.',
+      action:'Underline the main point, its reason and its example. Add anything that is missing.' });
+  }
+  if (targets.length < 3 && countWords(arg2) >= 5) {
+    add({ kind:'self-check', area:'Argument 2', field:'draftArg2',
+      title:'Check the second argument',
+      detail:'This paragraph should contribute a distinct point or a considered counterargument.',
+      action:'Compare it with Argument 1. Explain what new idea it adds and why that matters.' });
+  }
+  if (targets.length < 3 && countWords(conc) >= 5) {
+    add({ kind:'self-check', area:'Conclusion', field:'draftConc',
+      title:'Check your conclusion',
+      detail:'The app can detect a conclusion, but cannot verify that it follows from the argument.',
+      action:'Compare the conclusion with your introduction. Reinforce your position without adding a new point.' });
+  }
+  if (targets.length < 3 && question) {
+    add({ kind:'self-check', area:'Introduction', field:'draftIntro',
+      title:'Check relevance to the question',
+      detail:'A question is assigned, but its meaning cannot be assessed automatically.',
+      action:'Underline the task words and check that your viewpoint addresses them.' });
+  }
+  return targets.slice(0,3);
+}
+
 function renderPriorities(a) {
   const list = document.getElementById('reviewPriorities');
   const context = document.getElementById('reviewTaskContext');
   if (context) context.hidden = Boolean(String(state.settings.essayQuestion || '').trim());
   if (!list) return;
   list.replaceChildren();
-  (a.priorities || []).slice(0,3).forEach(message => {
+  (a.priorities || []).slice(0,3).forEach(target => {
     const item = document.createElement('li');
-    item.textContent = message;
+    item.className = 'review-target';
+    const content = document.createElement('div');
+    content.className = 'review-target-content';
+    const top = document.createElement('div');
+    top.className = 'review-target-meta';
+    const area = document.createElement('span');
+    area.className = 'review-target-area';
+    area.textContent = target.area;
+    const kind = document.createElement('span');
+    kind.className = 'review-target-kind';
+    kind.textContent = target.kind === 'observed' ? 'Detected feature' : 'Self-check';
+    top.append(area, kind);
+    const heading = document.createElement('strong');
+    heading.textContent = target.title;
+    const detail = document.createElement('p');
+    detail.textContent = target.detail;
+    const action = document.createElement('div');
+    action.className = 'review-target-action';
+    action.textContent = 'Try this: ' + target.action;
+    content.append(top, heading, detail, action);
+    const go = document.createElement('button');
+    go.className = 'btn btn-sm btn-secondary review-edit-target';
+    go.type = 'button';
+    go.textContent = 'Edit ' + target.area;
+    go.addEventListener('click', () => {
+      switchTab('draft');
+      const field = document.getElementById(target.field);
+      if (field) field.focus({ preventScroll: true });
+      if (field) field.scrollIntoView({ block:'center', behavior:'instant' });
+    });
+    item.append(content, go);
     list.appendChild(item);
   });
 }
