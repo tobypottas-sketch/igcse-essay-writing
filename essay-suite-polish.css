@@ -745,3 +745,29 @@ body { font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFon
   #panel-review .review-performance-card .perf-card .perf-label { font-size:.6rem; }
   #panel-review .review-performance-card .perf-card .perf-value { font-size:.91rem; }
 }
+
+/* Final sticky targets: Draft word count follows students as they write.
+   Review estimates remain in normal flow and do not obstruct feedback. */
+#panel-review > .review-performance-card {
+  position:relative;
+  top:auto;
+  z-index:auto;
+  isolation:auto;
+}
+#panel-draft #wcMeter {
+  position:sticky;
+  top:8px;
+  z-index:70;
+  isolation:isolate;
+  background:#fff;
+  border:1px solid #cde3e1;
+  box-shadow:0 6px 18px rgba(23,56,82,.09);
+}
+@media(max-width:700px) {
+  #panel-draft #wcMeter { top:0; }
+  #panel-draft .section-wc { gap:4px; }
+  #panel-draft .section-wc-item {
+    padding:2px 5px;
+    flex:1 1 75px;
+  }
+}
