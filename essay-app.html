@@ -2480,7 +2480,7 @@ function buildWritingTargets({ intro, arg1, arg2, conc, total, question, wordMin
   // Only flag repeated topic words, not high-frequency function words.
   const excluded = new Set(['which','their','there','these','those','about','would',
     'could','should','being','because','people','think','believe','however','although',
-    'firstly','secondly','example','another','really','very','students','school']);
+    'firstly','secondly','example','another','really','very']);
   const frequencies = new Map();
   sections.forEach(s => words(s.text).forEach(w => {
     if (w.length > 4 && !excluded.has(w)) frequencies.set(w,(frequencies.get(w)||0)+1);
