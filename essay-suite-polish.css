@@ -923,3 +923,57 @@ body { font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFon
   }
   #panel-review .review-edit-target { align-self:flex-start; }
 }
+
+/* Draft clearing: unobtrusive per-paragraph actions and a separate whole-draft action. */
+#panel-draft .draft-paper > .card > .card-header {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:10px;
+}
+#panel-draft .draft-clear-section,
+#panel-draft .draft-clear-all {
+  background:#fff;
+  border:1px solid #d7e4e5;
+  border-radius:9px;
+  color:#56707a;
+  font-weight:650;
+  box-shadow:none;
+}
+#panel-draft .draft-clear-section {
+  padding:6px 10px;
+  min-height:34px;
+  font-size:.78rem;
+}
+#panel-draft .draft-clear-section:hover:not(:disabled),
+#panel-draft .draft-clear-all:hover:not(:disabled) {
+  background:#f0f5f6;
+  border-color:#b7d0d3;
+  color:#285668;
+}
+#panel-draft .draft-clear-section:focus-visible,
+#panel-draft .draft-clear-all:focus-visible {
+  outline:3px solid #2e73d6;
+  outline-offset:2px;
+}
+#panel-draft .draft-clear-section:disabled,
+#panel-draft .draft-clear-all:disabled {
+  opacity:.48;
+  cursor:not-allowed;
+}
+#panel-draft .draft-clear-all-row {
+  display:flex;
+  justify-content:flex-start;
+  max-width:980px;
+  padding:0 2px;
+  margin:15px auto 0;
+}
+#panel-draft .draft-clear-all {
+  padding:9px 13px;
+  min-height:39px;
+  font-size:.84rem;
+}
+@media(max-width:700px) {
+  #panel-draft .draft-clear-section { margin-left:auto; }
+}
