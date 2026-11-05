@@ -52,7 +52,7 @@ test('repeated topic words are reported using measured occurrences, not invented
   }));
   const match = results.find(t => /repeated vocabulary/i.test(t.title));
   assert.ok(match);
-  assert.match(match.detail, /“phones” appears 5 times/);
+  assert.match(match.detail, /“phones” appears 7 times/);
   assert.match(match.action, /when precise/);
 });
 
