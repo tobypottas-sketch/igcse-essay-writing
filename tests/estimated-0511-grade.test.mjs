@@ -20,7 +20,17 @@ test('Review presents at most three actionable priorities and no new pseudo-scor
   assert.match(html, /priorities\.slice\(0,\s*3\)/);
   assert.match(html, /contentLabel: 'Not assessed'/);
   assert.match(html, /langLabel: 'Not assessed'/);
-  assert.match(html, /Task relevance: Not assessed — no question provided/);
+  assert.match(html, /id="reviewTaskContext" hidden/);
+  assert.match(html, /context.hidden = Boolean/);
+  assert.doesNotMatch(html, /priorities.push\('No essay question is assigned/);
+});
+ 
+test('Review observations do not repeat summary word count or relevance', () => {
+  const checks = html.slice(html.indexOf('function renderChecks(a) {'), html.indexOf('function renderPriorities(a) {'));
+  assert.match(checks, /Paragraphs entered/);
+  assert.doesNotMatch(checks, /Question and length/);
+  assert.doesNotMatch(checks, /Task relevance/);
+  assert.doesNotMatch(checks, /Word count:/);
 });
 
 test('Exam mode preserves locked feedback before a submitted attempt', () => {
