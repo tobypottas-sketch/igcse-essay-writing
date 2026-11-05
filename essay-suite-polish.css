@@ -826,3 +826,31 @@ body { font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFon
 @media(max-width:690px){
   #panel-review .review-priorities li { padding:11px; }
 }
+
+/* Review refinement: one observations panel, distinct neutral task context. */
+#panel-review #checkGrid { grid-template-columns:minmax(0,1fr); }
+#panel-review #checkGrid .check-section {
+  padding:14px 17px;
+}
+#panel-review #checkGrid .check-section .check-item {
+  display:inline-flex;
+  width:calc(50% - 5px);
+  vertical-align:top;
+}
+#panel-review .review-task-context[hidden] { display:none !important; }
+#panel-review .review-task-context {
+  margin:0 0 13px;
+  padding:12px 15px;
+  border:1px solid #d6e5e7;
+  border-radius:10px;
+  background:#f5f9fa;
+  color:#476574;
+  font-size:.88rem;
+  line-height:1.5;
+}
+@media(max-width:650px) {
+  #panel-review #checkGrid .check-section .check-item {
+    display:flex;
+    width:100%;
+  }
+}
