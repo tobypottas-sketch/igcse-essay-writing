@@ -995,7 +995,10 @@ textarea:focus,input:focus,select:focus{border-color:var(--teal);box-shadow:0 0 
     <!-- Suggestions -->
     <div class="card review-priority-card">
       <div class="card-header"><div class="card-header-left"><div class="accent-bar"></div><h3>Suggestions for Improvement</h3></div></div>
-      <div class="card-body"><ol class="review-priorities" id="reviewPriorities"></ol></div>
+      <div class="card-body">
+        <p class="review-task-context" id="reviewTaskContext" hidden role="note">No essay question is assigned. Suggestions below are based on writing features, not task relevance.</p>
+        <ol class="review-priorities" id="reviewPriorities"></ol>
+      </div>
     </div>
 
     <!-- Checks -->
@@ -2314,8 +2317,7 @@ function analyzeEssay() {
   const priorities = [];
   if (wcI < 5 || (wcA1 < 5 && wcA2 < 5) || wcC < 5)
     priorities.push('Complete the introduction, main argument and conclusion before reviewing.');
-  if (!question) priorities.push('No essay question is assigned, so task relevance cannot be assessed.');
-  else priorities.push('Compare each paragraph with the assigned question to check relevance.');
+  if (question) priorities.push('Compare each paragraph with the assigned question to check relevance.');
   const repetition = langWarnings.find(w => w.msg.startsWith('Repeated vocabulary:'));
   if (repetition) priorities.push('Consider varying repeated words where it sounds natural: ' + repetition.msg.replace('Repeated vocabulary: ', ''));
   if (total < state.settings.wordMin)
@@ -2387,6 +2389,8 @@ function updateAll() {
     const lang = document.getElementById('langFeedback');
     const priorities = document.getElementById('reviewPriorities');
     if (priorities) priorities.replaceChildren();
+    const taskContext = document.getElementById('reviewTaskContext');
+    if (taskContext) taskContext.hidden = true;
     if (pc) { pc.textContent = '—'; pc.className = 'perf-value'; }
     if (pl) { pl.textContent = '—'; pl.className = 'perf-value'; }
     if (band) band.textContent = '—';
@@ -2418,6 +2422,8 @@ function clearReviewOutputs() {
   const preview = document.getElementById('essayPreview');
   const priorities = document.getElementById('reviewPriorities');
   if (priorities) priorities.replaceChildren();
+  const taskContext = document.getElementById('reviewTaskContext');
+  if (taskContext) taskContext.hidden = true;
   if (pc) { pc.textContent = '—'; pc.className = 'perf-value'; }
   if (pl) { pl.textContent = '—'; pl.className = 'perf-value'; }
   const grade = document.getElementById('perfGradeBand');
@@ -2440,21 +2446,14 @@ function renderChecks(a) {
       (words ? '✓' : 'i') + '</div><span>' + esc(name) + ': ' +
       words + ' words' + (words ? '' : ' (not started)') + '</span></div>';
   }).join('');
-  const hasQuestion = Boolean(String(state.settings.essayQuestion || '').trim());
-  const min = state.settings.wordMin, max = state.settings.wordMax;
-  const range = a.total >= min && a.total <= max ? 'within target' :
-    a.total < min ? 'below target' : 'above target';
-  grid.innerHTML =
-    '<div class="check-section"><h4>Paragraphs entered</h4>' + paragraphs + '</div>' +
-    '<div class="check-section"><h4>Question and length</h4>' +
-    '<div class="check-item"><div class="check-icon info">i</div><span>' +
-    (hasQuestion ? 'Question provided — relevance needs teacher judgement.' :
-    'Task relevance: Not assessed — no question provided.') + '</span></div>' +
-    '<div class="check-item"><div class="check-icon info">i</div><span>Word count: ' +
-    a.total + ' (' + range + '; target ' + min + '–' + max + ')</span></div></div>';
+  // Word count and task relevance are already shown in Writing Snapshot.
+  grid.innerHTML = '<div class="check-section"><h4>Paragraphs entered</h4>' + paragraphs + '</div>';
 }
+
 function renderPriorities(a) {
   const list = document.getElementById('reviewPriorities');
+  const context = document.getElementById('reviewTaskContext');
+  if (context) context.hidden = Boolean(String(state.settings.essayQuestion || '').trim());
   if (!list) return;
   list.replaceChildren();
   (a.priorities || []).slice(0,3).forEach(message => {
