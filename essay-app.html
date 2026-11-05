@@ -1222,11 +1222,11 @@ textarea:focus,input:focus,select:focus{border-color:var(--teal);box-shadow:0 0 
       <div class="card-body">
         <div class="analytics-grid" id="analyticsStats"></div>
         <div style="margin-top:24px;">
-          <h4 style="font-size:0.82rem;font-weight:700;margin-bottom:12px;">Content/Message Rating Spread</h4>
+          <h4 style="font-size:0.82rem;font-weight:700;margin-bottom:12px;">Historic Content Labels (legacy records)</h4>
           <div class="analytics-bar-chart" id="chartContent" style="margin-bottom:40px;"></div>
         </div>
         <div style="margin-top:24px;">
-          <h4 style="font-size:0.82rem;font-weight:700;margin-bottom:12px;">Language Rating Spread</h4>
+          <h4 style="font-size:0.82rem;font-weight:700;margin-bottom:12px;">Historic Language Labels (legacy records)</h4>
           <div class="analytics-bar-chart" id="chartLanguage" style="margin-bottom:40px;"></div>
         </div>
         <div style="margin-top:24px;">
@@ -2234,7 +2234,7 @@ function analyzeEssay() {
   // Exaggerated
   const foundExag = EXAGGERATED.filter(e => allLower.includes(e));
   if (foundExag.length > 0) {
-    langWarnings.push({ type: 'warn', msg: 'Exaggerated/spoken-style wording: ' + foundExag.slice(0, 4).join(', ') });
+    langWarnings.push({ type: 'info', msg: 'Absolute wording to consider in context: ' + foundExag.slice(0, 4).join(', ') });
   }
 
   // Repeated vocabulary
@@ -2259,7 +2259,7 @@ function analyzeEssay() {
   // Linking devices
   const foundLinking = LINKING_DEVICES.filter(l => allLower.includes(l));
   if (foundLinking.length >= 3) {
-    langWarnings.push({ type: 'pass', msg: 'Good range of linking devices: ' + foundLinking.slice(0, 6).join(', ') });
+    langWarnings.push({ type: 'pass', msg: 'Linking expressions detected: ' + foundLinking.slice(0, 6).join(', ') });
   } else if (foundLinking.length > 0) {
     langWarnings.push({ type: 'info', msg: 'Some linking devices found, but try to vary them more.' });
   } else if (total > 20) {
@@ -2282,7 +2282,7 @@ function analyzeEssay() {
       if (variance < 4 && sentences.length >= 4) {
         langWarnings.push({ type: 'info', msg: 'Sentences are similar in length — try mixing short and long sentences for variety.' });
       } else if (variance >= 9) {
-        langWarnings.push({ type: 'pass', msg: 'Good sentence variety detected.' });
+        langWarnings.push({ type: 'pass', msg: 'Sentence lengths vary across the draft.' });
       }
     }
   }
@@ -2290,14 +2290,14 @@ function analyzeEssay() {
   // Complex structures
   const foundComplex = COMPLEX_STRUCTURES.filter(c => allLower.includes(c));
   if (foundComplex.length >= 3) {
-    langWarnings.push({ type: 'pass', msg: 'Signs of complex sentence structures: ' + foundComplex.slice(0, 4).join(', ') });
+    langWarnings.push({ type: 'pass', msg: 'Possible complex-structure markers detected: ' + foundComplex.slice(0, 4).join(', ') });
   } else if (total > 40 && foundComplex.length === 0) {
     langWarnings.push({ type: 'info', msg: 'Try using more complex sentence structures (e.g. although, despite, whereas).' });
   }
 
   // Rhetorical question in intro
   if (intro.includes('?')) {
-    langWarnings.push({ type: 'pass', msg: 'Rhetorical question used in introduction — can be an effective opening.' });
+    langWarnings.push({ type: 'pass', msg: 'Question mark found in the introduction; check whether the question suits the task.' });
   }
 
   // Copied prompt wording check
@@ -2720,14 +2720,13 @@ function recordSubmission() {
     wordCount: analysis.total,
     contentLabel: analysis.contentLabel,
     langLabel: analysis.langLabel,
+    // Store only observable missing sections, not guesses about content quality.
     failedChecks: [
-      ...analysis.checks.structure.filter(c => c.status === 'fail').map(c => c.label),
-      ...analysis.checks.task.filter(c => c.status === 'fail').map(c => c.label)
+      ...[['Introduction','draftIntro'],['Body','draftArg1'],['Conclusion','draftConc']]
+        .filter(([label,id]) => !gv(id).trim())
+        .map(([label]) => label + ' not started')
     ],
-    warnChecks: [
-      ...analysis.checks.structure.filter(c => c.status === 'warn').map(c => c.label),
-      ...analysis.checks.task.filter(c => c.status === 'warn').map(c => c.label)
-    ],
+    warnChecks: [],
     langWarnings: analysis.langWarnings.filter(w => w.type === 'warn').map(w => w.msg)
   });
   safeStorageSet(storageKey('submissions'), JSON.stringify(submissions));
@@ -2786,15 +2785,23 @@ function renderAnalytics() {
 }
 
 function renderRatingChart(containerId, labels) {
-  const counts = { 'Limited': 0, 'Sound': 0, 'Strong': 0, '—': 0 };
-  labels.forEach(l => { counts[l] = (counts[l] || 0) + 1; });
-  delete counts['—'];
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  // Display old, locally held labels only as historical records. New
+  // submissions intentionally have no quality grade or rating.
+  const legacy = labels.filter(l => ['Limited','Sound','Strong'].includes(l));
+  if (!legacy.length) {
+    container.innerHTML = '<p style="font-size:.85rem;color:#607782;">No legacy ratings to display. New submissions use writing observations instead of automated scores.</p>';
+    return;
+  }
+  const counts = { 'Limited': 0, 'Sound': 0, 'Strong': 0 };
+  legacy.forEach(label => { counts[label]++; });
   const max = Math.max(...Object.values(counts), 1);
   const colors = { 'Limited': '#c0392b', 'Sound': '#e67e22', 'Strong': '#27ae60' };
-  const container = document.getElementById(containerId);
-  container.innerHTML = Object.entries(counts).map(([label, count]) => {
-    const h = Math.max((count / max) * 100, 4);
-    return '<div class="analytics-bar" style="height:' + h + '%;background:' + colors[label] + ';"><div class="analytics-bar-val">' + count + '</div><div class="analytics-bar-label">' + label + '</div></div>';
+  container.innerHTML = Object.entries(counts).map(([label,count]) => {
+    const height = Math.max((count / max) * 100, 4);
+    return '<div class="analytics-bar" style="height:' + height + '%;background:' + colors[label] + '"><div class="analytics-bar-val">' +
+      count + '</div><div class="analytics-bar-label">' + label + '</div></div>';
   }).join('');
 }
 
