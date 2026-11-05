@@ -771,3 +771,58 @@ body { font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFon
     flex:1 1 75px;
   }
 }
+
+/* Evidence-first Review: concise, student-facing observations and priorities. */
+#panel-review .review-priority-card {
+  border-color:#cfe5e1;
+  background:#fff;
+}
+#panel-review .review-priority-card > .card-header {
+  background:#f4faf9;
+}
+#panel-review .review-priorities {
+  margin:0;
+  padding:0;
+  list-style:none;
+  counter-reset:priority;
+  display:grid;
+  gap:10px;
+}
+#panel-review .review-priorities li {
+  counter-increment:priority;
+  display:flex;
+  gap:13px;
+  align-items:flex-start;
+  padding:13px 15px;
+  border:1px solid #dce9e8;
+  border-radius:11px;
+  background:#fbfdfd;
+  color:#294856;
+  font-size:.93rem;
+  line-height:1.55;
+}
+#panel-review .review-priorities li::before {
+  content:counter(priority,decimal-leading-zero);
+  display:grid;
+  place-items:center;
+  flex:0 0 31px;
+  height:31px;
+  border-radius:9px;
+  background:#e7f5f3;
+  color:#137e80;
+  font-size:.74rem;
+  font-weight:850;
+}
+#panel-review .review-performance-card .perf-grade-card .perf-value {
+  font-size:.96rem;
+  line-height:1.4;
+  color:#365461;
+}
+#panel-review .review-estimate-note { padding:2px 8px; }
+#panel-review #checkGrid .check-section .check-icon.info {
+  background:#e7f2f5;
+  color:#40758c;
+}
+@media(max-width:690px){
+  #panel-review .review-priorities li { padding:11px; }
+}
