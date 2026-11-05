@@ -913,7 +913,7 @@ textarea:focus,input:focus,select:focus{border-color:var(--teal);box-shadow:0 0 
     <div class="draft-paper" aria-label="Essay draft workspace">
       <div class="draft-paper-heading"><span class="draft-paper-eyebrow">YOUR ESSAY</span><h2>Build your draft</h2><p>Write one paragraph at a time. Your work is saved as you go.</p></div>
     <div class="card">
-      <div class="card-header"><div class="card-header-left"><div class="accent-bar"></div><h3>Introduction</h3></div></div>
+      <div class="card-header"><div class="card-header-left"><div class="accent-bar"></div><h3>Introduction</h3></div><button type="button" class="btn draft-clear-section no-print" data-clear-draft="draftIntro" onclick="clearDraftSection('draftIntro')">Clear section</button></div>
       <div class="card-body">
         <div class="scaffold-tip" id="scaffoldIntro" style="display:none;">Introduce the topic and state your position clearly. You might start with a general statement or a rhetorical question. Avoid copying the question word for word.</div>
         <div class="draft-section-label" id="labelIntro" style="display:none;">Introduction</div>
@@ -923,7 +923,7 @@ textarea:focus,input:focus,select:focus{border-color:var(--teal);box-shadow:0 0 
     </div>
 
     <div class="card">
-      <div class="card-header"><div class="card-header-left"><div class="accent-bar"></div><h3>Main Argument 1</h3></div></div>
+      <div class="card-header"><div class="card-header-left"><div class="accent-bar"></div><h3>Main Argument 1</h3></div><button type="button" class="btn draft-clear-section no-print" data-clear-draft="draftArg1" onclick="clearDraftSection('draftArg1')">Clear section</button></div>
       <div class="card-body">
         <div class="scaffold-tip" id="scaffoldArg1" style="display:none;">Present your first argument with a reason. Then develop it with an example or further explanation. One well-developed point is better than several shallow ones.</div>
         <div class="draft-section-label" id="labelArg1" style="display:none;">Body Paragraph 1</div>
@@ -933,7 +933,7 @@ textarea:focus,input:focus,select:focus{border-color:var(--teal);box-shadow:0 0 
     </div>
 
     <div class="card">
-      <div class="card-header"><div class="card-header-left"><div class="accent-bar"></div><h3 id="arg2Title">Main Argument 2 / Counterargument</h3></div></div>
+      <div class="card-header"><div class="card-header-left"><div class="accent-bar"></div><h3 id="arg2Title">Main Argument 2 / Counterargument</h3></div><button type="button" class="btn draft-clear-section no-print" data-clear-draft="draftArg2" onclick="clearDraftSection('draftArg2')">Clear section</button></div>
       <div class="card-body">
         <div class="scaffold-tip" id="scaffoldArg2" style="display:none;">If writing a balanced essay, present the other side here. If one-sided, give another reason for your position. Develop this point fully with reasoning and examples.</div>
         <div class="draft-section-label" id="labelArg2" style="display:none;">Body Paragraph 2</div>
@@ -943,7 +943,7 @@ textarea:focus,input:focus,select:focus{border-color:var(--teal);box-shadow:0 0 
     </div>
 
     <div class="card">
-      <div class="card-header"><div class="card-header-left"><div class="accent-bar"></div><h3>Conclusion</h3></div></div>
+      <div class="card-header"><div class="card-header-left"><div class="accent-bar"></div><h3>Conclusion</h3></div><button type="button" class="btn draft-clear-section no-print" data-clear-draft="draftConc" onclick="clearDraftSection('draftConc')">Clear section</button></div>
       <div class="card-body">
         <div class="scaffold-tip" id="scaffoldConc" style="display:none;">Summarise your argument and restate your opinion. Do not introduce new ideas. Keep it concise — a few sentences is enough.</div>
         <div class="draft-section-label" id="labelConc" style="display:none;">Conclusion</div>
@@ -959,6 +959,9 @@ textarea:focus,input:focus,select:focus{border-color:var(--teal);box-shadow:0 0 
       <button class="btn btn-secondary" id="btnPreviewDraft" onclick="switchTab('preview')">Preview Final Essay</button>
       <button class="btn btn-primary" id="btnSubmitExam" onclick="submitExam()" style="display:none;">Submit Exam</button>
       <button class="btn btn-secondary" id="btnNewExamAttempt" onclick="startNewExamAttempt()" style="display:none;">Start new attempt</button>
+    </div>
+    <div class="draft-clear-all-row no-print">
+      <button type="button" id="btnClearEntireDraft" class="btn draft-clear-all" onclick="clearEntireDraft()">Clear entire draft</button>
     </div>
   </div>
 
@@ -1936,6 +1939,58 @@ function startNewExamAttempt() {
   switchTab('task');
 }
 
+// Draft-only deletion: planning notes, assigned task and saved drafts stay intact.
+const DRAFT_CLEAR_FIELDS = Object.freeze({
+  draftIntro: 'Introduction',
+  draftArg1: 'Main Argument 1',
+  draftArg2: 'Main Argument 2 / Counterargument',
+  draftConc: 'Conclusion'
+});
+
+function draftEditingLocked() {
+  return state.studyMode === 'exam' && state.examSubmitted;
+}
+
+function clearDraftSection(fieldId) {
+  if (!Object.prototype.hasOwnProperty.call(DRAFT_CLEAR_FIELDS, fieldId)) return;
+  if (draftEditingLocked()) return;
+  const field = document.getElementById(fieldId);
+  if (!field || field.disabled || !field.value.trim()) return;
+  if (!window.confirm('Clear ' + DRAFT_CLEAR_FIELDS[fieldId] + '? This will delete the text in this section only.')) return;
+  clearTimeout(autosaveTimer);
+  field.value = '';
+  saveState();
+  updateAll();
+  updateDraftClearControls();
+  showToast(DRAFT_CLEAR_FIELDS[fieldId] + ' cleared');
+}
+
+function clearEntireDraft() {
+  if (draftEditingLocked()) return;
+  const fields = Object.keys(DRAFT_CLEAR_FIELDS).map(id => document.getElementById(id));
+  if (fields.some(field => !field || field.disabled)) return;
+  if (!fields.some(field => field.value.trim())) return;
+  if (!window.confirm('Clear the entire essay draft? All four writing sections will be emptied. Your plan, assigned question and saved drafts will remain.')) return;
+  clearTimeout(autosaveTimer);
+  fields.forEach(field => { field.value = ''; });
+  saveState();
+  updateAll();
+  updateDraftClearControls();
+  showToast('Entire draft cleared');
+}
+
+function updateDraftClearControls() {
+  const locked = draftEditingLocked();
+  for (const id of Object.keys(DRAFT_CLEAR_FIELDS)) {
+    const field = document.getElementById(id);
+    const button = document.querySelector('[data-clear-draft="' + id + '"]');
+    if (button) button.disabled = locked || !field || !field.value.trim();
+  }
+  const clearAll = document.getElementById('btnClearEntireDraft');
+  if (clearAll) clearAll.disabled = locked || !Object.keys(DRAFT_CLEAR_FIELDS)
+    .some(id => { const field = document.getElementById(id); return field && field.value.trim(); });
+}
+
 function updateModeUI() {
   const exam = state.studyMode === 'exam';
   const locked = exam && state.examSubmitted;
@@ -1965,6 +2020,7 @@ function updateModeUI() {
   if (previewBtn) previewBtn.style.display = preSubmitExam ? 'none' : '';
   if (submitBtn) submitBtn.style.display = preSubmitExam ? '' : 'none';
   if (newBtn) newBtn.style.display = locked ? '' : 'none';
+  updateDraftClearControls();
 }
 
 // ===== TEACHER MODE =====
@@ -2028,6 +2084,7 @@ let autosaveTimer = null;
 
 function onDraftInput() {
   updateWordCounts();
+  updateDraftClearControls();
   scheduleAutosave();
 }
 
@@ -2366,6 +2423,7 @@ function getChunks(text, size) {
 // ===== RENDER REVIEW =====
 function updateAll() {
   updateWordCounts();
+  updateDraftClearControls();
   if (state.studyMode === 'exam' && !state.examSubmitted) {
     setReviewEmptyState(false);
     clearReviewOutputs();
