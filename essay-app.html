@@ -3335,6 +3335,7 @@ function loadPracticeQuestion() {
   state.bankTaskId = item.id;
   state.sharedTaskKey = 'bank:' + item.id;
   state.controlledTaskId = '';
+  resetEssayFeedback(); // also when the workspace was empty and no clearing happened above
   // Write the cleared workspace to the fields first: saveState() reads the fields back, which would otherwise restore the old text.
   applySettings();
   saveState();
