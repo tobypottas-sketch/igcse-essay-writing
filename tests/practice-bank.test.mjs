@@ -70,3 +70,9 @@ test('teacher tasks stay in charge and the selector cannot go stale', () => {
   assert.match(html, /applySettings\(\);\n  saveState\(\);\n  updateAll\(\);\n  showToast\('Question loaded/);
   assert.match(html, /syncPracticePicker\(true\);/);
 });
+
+test('loading a practice question always clears old AI feedback, even when the workspace was empty', () => {
+  const from = html.indexOf('function loadPracticeQuestion()');
+  const body = html.slice(from, html.indexOf('\n}\n', from));
+  assert.match(body, /resetEssayFeedback\(\);/);
+});
