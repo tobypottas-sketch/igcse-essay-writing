@@ -28,5 +28,5 @@ test('Essay app uses Cambridge suite branding', () => {
 
 test('student empty-task guidance does not invite Teacher Mode', () => {
   assert.equal(html.includes('Ask your teacher or switch to Teacher Mode to set the task.'), false);
-  assert.match(html, /Open a shared task link from your teacher/);
+  assert.match(html, /open a shared task link from your teacher/);
 });

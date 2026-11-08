@@ -722,6 +722,37 @@ textarea:focus,input:focus,select:focus{border-color:var(--teal);box-shadow:0 0 
 .header-right > .hub-return-link{flex-shrink:0;margin-left:4px} 
 @media(max-width:700px){.hub-return-link{padding:8px 12px;font-size:.78rem}}
 
+
+/* Practice question picker (Task tab) */
+.practice-picker{margin-bottom:18px;overflow:visible}
+.practice-picker .card-body{padding:16px 20px 18px}
+.practice-picker label{display:block;margin-bottom:8px}
+.practice-picker__row{display:flex;gap:10px;align-items:stretch;flex-wrap:wrap}
+.practice-combo{position:relative;flex:1 1 320px;min-width:0}
+.practice-select-native{position:absolute!important;width:1px!important;height:1px!important;min-height:0!important;opacity:0;pointer-events:none;overflow:hidden}
+.practice-combo__btn{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;min-height:46px;padding:10px 12px;text-align:left;font:inherit;color:#243032;background:#fff;border:1px solid #cfdcda;border-radius:11px;cursor:pointer}
+.practice-combo__btn:focus-visible,.practice-combo__list:focus-visible{outline:none;border-color:#149b96;box-shadow:0 0 0 3px rgba(20,155,150,.18)}
+.practice-combo__btn.is-placeholder .practice-combo__text{color:#5a6a6c}
+.practice-combo__text{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.practice-combo__caret{flex:0 0 auto;width:8px;height:8px;border:solid currentColor;border-width:0 2px 2px 0;transform:rotate(45deg) translateY(-2px)}
+.practice-combo__btn[aria-expanded="true"] .practice-combo__caret{transform:rotate(-135deg) translateY(-2px)}
+.practice-combo__list{position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:30;margin:0;padding:4px;list-style:none;overflow-y:auto;overscroll-behavior:contain;background:#fff;border:1px solid #cfdcda;border-radius:11px;box-shadow:0 10px 28px rgba(23,56,82,.16)}
+.practice-combo__list.is-up{top:auto;bottom:calc(100% + 4px)}
+.practice-combo__list[hidden]{display:none}
+.practice-combo__list [role="option"]{padding:10px 12px;min-height:44px;display:flex;align-items:center;border-radius:8px;cursor:pointer;line-height:1.3}
+.practice-combo__list [role="option"].is-active{background:#eaf8f7}
+.practice-combo__list [role="option"][aria-selected="true"]{font-weight:700;color:#0d7f7b}
+.practice-picker__row .btn{min-height:46px;flex:0 0 auto}
+.practice-picker__row .btn:disabled{background:#e6eeef;color:#647983;cursor:not-allowed;box-shadow:none}
+.practice-preview{margin-top:14px;padding:14px 16px;border:1px solid #d8ebe8;border-left:5px solid #149b96;border-radius:12px;background:#f9fdfc}
+.practice-preview__tag{font-size:.74rem;font-weight:800;letter-spacing:.02em;text-transform:uppercase;color:#0d7f7b;margin-bottom:6px}
+.practice-preview__question{margin:0 0 8px;font-weight:700;line-height:1.5}
+.practice-preview__prompts{margin:0 0 8px;padding-left:20px;font-size:.92rem;line-height:1.55;color:#394544}
+.practice-preview__meta{margin:0;font-size:.8rem;color:#5d6a68}
+.practice-note{margin:12px 0 0;font-size:.82rem;line-height:1.5;color:#5d6a68}
+.teacher-task-note{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:14px;padding:10px 14px;border:1px solid #d8ebe8;border-radius:12px;background:#f9fdfc;font-size:.9rem;color:#394544}
+.teacher-task-note[hidden],.practice-picker[hidden],.practice-preview[hidden]{display:none}
+@media(max-width:540px){.practice-picker__row .btn{width:100%}.practice-combo{flex-basis:100%}}
 </style>
 <link rel="stylesheet" href="essay-suite-polish.css">
 </head>
@@ -784,9 +815,24 @@ textarea:focus,input:focus,select:focus{border-color:var(--teal);box-shadow:0 0 
 
   <!-- ========== TAB: TASK ========== -->
   <div class="tab-panel active" id="panel-task">
+    <div class="card practice-picker" id="practicePicker">
+      <div class="card-body">
+        <label id="practiceChooseLabel" for="practiceSelect">Choose a practice question</label>
+        <div class="practice-picker__row">
+          <select id="practiceSelect"><option value="">-- Select a practice question --</option></select>
+          <button type="button" class="btn btn-primary" id="practiceLoadButton" onclick="loadPracticeQuestion()" disabled aria-disabled="true">Use this question</button>
+        </div>
+        <div class="practice-preview" id="practicePreview" hidden></div>
+        <p class="practice-note">These are original practice questions written in the style of Cambridge IGCSE 0511 Exercise 6 (120&ndash;160 words). They are not official Cambridge past-paper questions. Every task is an <strong>essay</strong>: write an introduction, developed paragraphs and a conclusion, even when the question mentions a magazine, newspaper or website.</p>
+      </div>
+    </div>
+    <div class="teacher-task-note" id="teacherTaskNote" role="note" hidden>
+      <span id="teacherTaskNoteText">Your teacher has set this task.</span>
+      <button type="button" class="btn btn-outline" id="teacherTaskLeaveButton" onclick="leaveTeacherTask()">Practise a different question</button>
+    </div>
     <div class="task-banner" id="taskBanner">
       <div class="task-label">Essay Question</div>
-      <div class="task-question" id="taskQuestionDisplay">No essay question set yet. Open a shared task link from your teacher.</div>
+      <div class="task-question" id="taskQuestionDisplay">No essay question chosen yet. Choose a practice question above, or open a shared task link from your teacher.</div>
       <div class="task-meta" id="taskMeta"></div>
     </div>
 
@@ -811,7 +857,7 @@ textarea:focus,input:focus,select:focus{border-color:var(--teal);box-shadow:0 0 
 
     <div class="task-actions">
       <button class="btn btn-primary" id="startPlanningButton" onclick="switchTab('plan')" disabled>Start Planning &rarr;</button>
-      <p class="task-empty-note" id="taskEmptyNote" role="status">Open a task link from your teacher to begin planning your essay.</p>
+      <p class="task-empty-note" id="taskEmptyNote" role="status">Choose a practice question above to begin planning your essay.</p>
     </div>
   </div>
 
@@ -1285,6 +1331,7 @@ let state = {
   lastAnalysis: null,
   sharedTaskKey: '',
   controlledTaskId: '',
+  bankTaskId: '',
 };
 const INITIAL_STATE_JSON = JSON.stringify(state);
 
@@ -1321,6 +1368,7 @@ let domReady = false;
 function initialiseApp() {
   if (appInitialised || !domReady) return;
   appInitialised = true;
+  populatePracticeSelect();
   loadState();
   const sharedTaskLoaded = applySharedTaskFromUrl();
   applySettings();
@@ -1573,6 +1621,7 @@ function applyControlledTask(controlledTask) {
   }
   state.settings = Object.assign({}, state.settings, incoming);
   state.controlledTaskId = id;
+  state.bankTaskId = '';
   state.sharedTaskKey = 'controlled:' + id;
   state.studyMode = controlledTask.studyMode === 'practice' ? 'practice' : 'exam';
   state.teacherMode = false;
@@ -1672,6 +1721,7 @@ function applySharedTaskFromUrl() {
   state.settings = Object.assign({}, state.settings, incoming);
   state.sharedTaskKey = shared.key;
   state.controlledTaskId = '';
+  state.bankTaskId = '';
   state.studyMode = 'practice';
   state.examSubmitted = false;
   state.teacherMode = false;
@@ -1723,8 +1773,11 @@ function applyTaskDisplay() {
   const s = state.settings;
   const qd = document.getElementById('taskQuestionDisplay');
   const hasEssayQuestion = Boolean(String(s.essayQuestion || '').trim());
-  qd.textContent = s.essayQuestion || 'No essay question set yet. Open a shared task link from your teacher.';
+  qd.textContent = s.essayQuestion || 'No essay question chosen yet. Choose a practice question above, or open a shared task link from your teacher.';
   document.getElementById('taskBanner').classList.toggle('essay-task-empty', !hasEssayQuestion);
+  const bannerLabel = document.querySelector('#taskBanner .task-label');
+  if (bannerLabel) bannerLabel.textContent = activePracticeId() ? 'Original practice question' : 'Essay Question';
+  syncPracticePicker(true);
   const planningButton = document.getElementById('startPlanningButton');
   if (planningButton) {
     planningButton.disabled = !hasEssayQuestion;
@@ -1737,6 +1790,7 @@ function applyTaskDisplay() {
   let metaHTML = '';
   if (s.audience) metaHTML += '<span>Audience: ' + esc(s.audience) + '</span>';
   if (state.controlledTaskId) metaHTML += '<span>Controlled teacher task</span>';
+  else if (activePracticeId()) metaHTML += '<span>Original practice \u2013 not an official Cambridge question</span>';
   else if (state.sharedTaskKey) metaHTML += '<span>Practice link</span>';
   metaHTML += '<span>Target: ' + s.wordMin + '–' + s.wordMax + ' words</span>';
   metaHTML += '<span>Type: ' + esc(s.argType === 'either' ? 'Either allowed' : s.argType === 'balanced' ? 'Balanced required' : 'One-sided required') + '</span>';
@@ -2021,6 +2075,7 @@ function updateModeUI() {
   if (submitBtn) submitBtn.style.display = preSubmitExam ? '' : 'none';
   if (newBtn) newBtn.style.display = locked ? '' : 'none';
   updateDraftClearControls();
+  syncPracticePicker(false);
 }
 
 // ===== TEACHER MODE =====
@@ -2062,6 +2117,7 @@ function applyTeacherUI() {
       switchTab('task');
     }
   }
+  syncPracticePicker(false);
 }
 
 function toggleScaffoldSetting() {
@@ -3001,6 +3057,286 @@ function doClearAnalytics() {
   renderAnalytics();
   closeModal();
   showToast('Analytics cleared');
+}
+
+// ===== ORIGINAL PRACTICE QUESTION BANK (Exercise 6 style) =====
+// Original questions written for self-study in the style of Cambridge IGCSE ESL 0511 Exercise 6 (essay, 120-160 words).
+// They are NOT Cambridge past-paper questions and must always be labelled as original practice.
+const PRACTICE_WORD_MIN = 120, PRACTICE_WORD_MAX = 160;
+const PRACTICE_BALANCED = 'Discuss both sides of the issue before giving your own opinion.';
+const PRACTICE_ONE_SIDED = 'Choose one side of the argument and explain your opinion clearly, using reasons and examples.';
+const PRACTICE_BANK = [
+  { id: 'weekend-homework', label: 'Homework at weekends', argType: 'balanced', audience: 'the school council',
+    question: 'Your school council is discussing whether teachers should stop setting homework at weekends. Your teacher has asked every student to send the council a short essay. Write your essay, considering both sides of the issue and giving your own opinion in your conclusion. Use a fairly formal style. Write 120–160 words.',
+    prompts: ['Some students say: ‘Weekends are for rest, family and hobbies. We work hard all week.’', 'Others say: ‘Homework helps us remember our lessons and learn to manage our time.’', 'Add your own idea or example.'] },
+  { id: 'phones-lessons', label: 'Phones in lessons', argType: 'one-sided', audience: 'readers of the school website',
+    question: 'Your school website is publishing student opinions on whether students should be allowed to use their phones in lessons for learning, for example to check a word or find information. Write an essay for the website. Choose one side of the argument and explain your opinion clearly, using reasons and examples. Write 120–160 words.',
+    prompts: ['‘A phone is a dictionary, a calculator and a library in one pocket.’', '‘Phones make it too easy to chat, play games and stop listening.’', 'Decide which view you support and give your own examples.'] },
+  { id: 'school-uniform', label: 'School uniform', argType: 'balanced', audience: 'your headteacher',
+    question: 'Your headteacher is considering whether students should continue to wear a school uniform and has invited students to share their views. Write an essay for the headteacher, discussing the advantages and disadvantages of school uniform and explaining which side you think is stronger. Use a formal or semi-formal style. Write 120–160 words.',
+    prompts: ['‘A uniform means nobody is judged by the clothes they can afford.’', '‘Students should be able to show their personality through what they wear.’', 'Think about cost, comfort and school identity.'] },
+  { id: 'social-media-limit', label: 'Time on social media', argType: 'one-sided', audience: 'readers of the school magazine',
+    question: 'The school magazine is running a series called ‘Growing Up Online’. You have been asked to write an essay about this statement: ‘Teenagers should spend no more than one hour a day on social media.’ Say whether you agree or disagree and support your opinion with reasons and examples. Write 120–160 words.',
+    prompts: ['‘Too much scrolling leaves less time for sleep, exercise and homework.’', '‘Social media helps me keep in touch with friends and learn new things.’', 'Explain which view you support.'] },
+  { id: 'foreign-languages', label: 'Learning two foreign languages', argType: 'one-sided', audience: 'young readers of a local newspaper',
+    question: 'A local newspaper has asked young people to respond to this statement: ‘Every student should learn at least two foreign languages at school.’ Write an essay for the newspaper’s young readers, giving your opinion and supporting it with reasons and examples. Write 120–160 words.',
+    prompts: ['‘Speaking more languages can open doors to jobs and travel.’', '‘Students already have too many subjects, so languages should be a choice.’', 'Think about your own experience of learning English.'] },
+  { id: 'teenage-jobs', label: 'Part-time jobs for students', argType: 'balanced', audience: 'your school careers adviser',
+    question: 'Your school careers adviser is preparing a talk about part-time jobs for students aged 15 to 17. You have been asked to write an essay for the adviser, discussing both the benefits and the drawbacks of having a part-time job while studying, and giving your own view. Use a semi-formal style. Write 120–160 words.',
+    prompts: ['‘A job teaches responsibility and gives you your own money.’', '‘Studying is already a full-time job, and work leaves no time to rest.’', 'What advice would you give to a student who is thinking about getting a job?'] },
+  { id: 'daily-pe', label: 'Daily physical education', argType: 'one-sided', audience: 'your school’s parent–teacher group',
+    question: 'Your school’s parent–teacher group is discussing this statement: ‘All students should have physical education every day.’ Write an essay for the group, saying whether you agree or disagree and explaining your reasons. Support your opinion with examples. Write 120–160 words.',
+    prompts: ['‘Regular exercise keeps students healthy and helps them to concentrate.’', '‘Students who dislike sport need that time for subjects that matter for their future.’', 'Include an example from your own school or daily life.'] },
+  { id: 'online-lessons', label: 'Online lessons', argType: 'balanced', audience: 'your school’s head of learning',
+    question: 'Your school is thinking about replacing some classroom lessons with online lessons that students follow from home. The head of learning has asked students to write an essay about this idea. Write about the advantages and disadvantages of online lessons and say what you think the school should do. Write 120–160 words.',
+    prompts: ['‘Online lessons save travel time and let me learn at my own speed.’', '‘In a classroom I can ask questions and learn with my friends.’', 'Think about concentration, technology and support from teachers.'] },
+  { id: 'plastic-bottles', label: 'Banning plastic bottles', argType: 'one-sided', audience: 'students and teachers reading the school newsletter',
+    question: 'Your school wants to reduce plastic waste. The school newsletter has asked students to respond to this idea: ‘The school should ban single-use plastic bottles.’ Write an essay for the newsletter, giving your opinion and explaining it with reasons and examples. Write 120–160 words.',
+    prompts: ['‘Plastic bottles are used for a few minutes but harm the environment for years.’', '‘A ban is inconvenient, and students may end up with nothing to drink.’', 'What practical changes could the school make?'] },
+  { id: 'choose-subjects', label: 'Choosing your own subjects', argType: 'balanced', audience: 'your head of year',
+    question: 'Your head of year is deciding whether students should be allowed to choose all of their own subjects from the age of 14. Write an essay for the head of year, discussing the possible benefits and problems and giving your own opinion. Use a formal or semi-formal style. Write 120–160 words.',
+    prompts: ['‘If I study subjects I enjoy, I will work harder and do better.’', '‘Some subjects, such as maths and languages, are important for everyone.’', 'Consider what could happen if students choose badly.'] },
+  { id: 'youth-volunteering', label: 'Volunteering by young people', argType: 'one-sided', audience: 'readers of a local youth website',
+    question: 'A local youth website has asked students to respond to this statement: ‘Young people should spend some of their free time doing volunteer work.’ Write an essay for the website’s readers. Say whether you agree or disagree and support your opinion with reasons and examples. Write 120–160 words.',
+    prompts: ['‘Volunteering helps the community and teaches useful skills.’', '‘Young people already have homework and very little free time.’', 'Think of a type of volunteering you have seen or would like to try.'] },
+  { id: 'travel-learning', label: 'Travelling to learn', argType: 'balanced', audience: 'members of your school debating club',
+    question: 'Your school’s debating club is preparing for a discussion on this statement: ‘Travelling is the best way to learn about the world.’ You have been asked to write an essay for the club members, considering both sides of the argument and giving your own opinion. Use a semi-formal style. Write 120–160 words.',
+    prompts: ['‘Seeing other cultures in person teaches us more than any book.’', '‘Books, films and the internet let us learn about places without the cost of travel.’', 'Include an example from your own experience or from something you have read.'] }
+];
+function practiceItem(id) { return PRACTICE_BANK.find(function(t) { return t.id === id; }) || null; }
+function practiceTypeLabel(argType) { return argType === 'balanced' ? 'Balanced' : 'One-sided'; }
+// The bank question that is currently loaded. Derived from the saved question text, so a teacher edit or a teacher link can never leave a stale selection.
+function activePracticeId() {
+  if (state.controlledTaskId || !state.bankTaskId) return '';
+  const item = practiceItem(state.bankTaskId);
+  return item && item.question === state.settings.essayQuestion ? item.id : '';
+}
+// An unsubmitted Exam Mode task from a teacher link is an active, locked assessment: the student must finish and submit it before practising something else.
+function teacherTaskLocked() {
+  return Boolean(state.controlledTaskId) && state.studyMode === 'exam' && !state.examSubmitted;
+}
+function teacherAssignedTask() {
+  return Boolean(state.controlledTaskId) || Boolean(state.sharedTaskKey && String(state.sharedTaskKey).indexOf('bank:') !== 0);
+}
+
+// ===== PRACTICE QUESTION PICKER =====
+// The native <select> stays the single source of truth (id, values, change event). The listbox below is a bounded, scrollable view of it,
+// because a native menu opens full height and blocks the page on macOS and some tablets.
+function enhancePracticeSelect(select) {
+  if (!select || select.dataset.enhanced) return;
+  select.dataset.enhanced = '1';
+  const wrap = document.createElement('div'); wrap.className = 'practice-combo';
+  const btn = document.createElement('button'); btn.type = 'button'; btn.id = 'practiceCombo'; btn.className = 'practice-combo__btn';
+  btn.setAttribute('aria-haspopup', 'listbox'); btn.setAttribute('aria-expanded', 'false'); btn.setAttribute('aria-labelledby', 'practiceChooseLabel practiceCombo');
+  const text = document.createElement('span'); text.className = 'practice-combo__text'; btn.append(text);
+  const caret = document.createElement('span'); caret.className = 'practice-combo__caret'; caret.setAttribute('aria-hidden', 'true'); btn.append(caret);
+  const list = document.createElement('ul'); list.className = 'practice-combo__list'; list.id = 'practiceList'; list.setAttribute('role', 'listbox');
+  list.setAttribute('aria-labelledby', 'practiceChooseLabel'); list.tabIndex = -1; list.hidden = true;
+  const items = [...select.options].filter(function(o) { return o.value; }).map(function(o, i) {
+    const li = document.createElement('li'); li.setAttribute('role', 'option'); li.id = 'practiceOpt' + i; li.dataset.value = o.value; li.textContent = o.textContent;
+    list.append(li); return li;
+  });
+  select.parentNode.insertBefore(wrap, select); wrap.append(btn, list, select);
+  select.classList.add('practice-select-native'); select.tabIndex = -1; select.setAttribute('aria-hidden', 'true');
+  let active = -1, typed = '', typedTimer = 0;
+  const selectedIndex = function() { return items.findIndex(function(li) { return li.dataset.value === select.value; }); };
+  function sync() {
+    const i = selectedIndex();
+    text.textContent = i >= 0 ? items[i].textContent : (select.options[0] ? select.options[0].textContent : 'Select a practice question');
+    btn.classList.toggle('is-placeholder', i < 0);
+    items.forEach(function(li, k) { li.setAttribute('aria-selected', k === i ? 'true' : 'false'); });
+  }
+  function setActive(i, scroll) {
+    if (!items.length) return;
+    active = Math.max(0, Math.min(items.length - 1, i));
+    items.forEach(function(li, k) { li.classList.toggle('is-active', k === active); });
+    list.setAttribute('aria-activedescendant', items[active].id);
+    if (scroll !== false) items[active].scrollIntoView({ block: 'nearest' });
+  }
+  function place() {
+    list.style.maxHeight = ''; list.classList.remove('is-up');
+    const row = (items[0] && items[0].offsetHeight) || 44, want = row * 6.5 + 8, TOP = 12;
+    let r = btn.getBoundingClientRect();
+    // Not enough room below: bring the picker up the page so the whole menu fits without being clipped.
+    if (window.innerHeight - r.bottom - 12 < want && r.top > TOP) { window.scrollBy({ top: r.top - TOP, behavior: 'instant' }); r = btn.getBoundingClientRect(); }
+    const below = window.innerHeight - r.bottom - 12, above = r.top - TOP;
+    const up = below < Math.min(want, 200) && above > below;
+    const room = Math.max(row * 2, Math.min(want, up ? above : below));
+    list.style.maxHeight = Math.floor(room) + 'px'; list.classList.toggle('is-up', up);
+  }
+  function open() {
+    if (!list.hidden) return;
+    list.hidden = false; btn.setAttribute('aria-expanded', 'true'); place();
+    const i = selectedIndex(); setActive(i >= 0 ? i : 0); list.focus({ preventScroll: true });
+    document.addEventListener('pointerdown', outside, true); window.addEventListener('resize', place);
+  }
+  function close(refocus) {
+    if (list.hidden) return;
+    list.hidden = true; btn.setAttribute('aria-expanded', 'false');
+    document.removeEventListener('pointerdown', outside, true); window.removeEventListener('resize', place);
+    if (refocus) btn.focus({ preventScroll: true });
+  }
+  function outside(e) { if (!wrap.contains(e.target)) close(false); }
+  function choose(i) {
+    if (i < 0 || i >= items.length) return;
+    const changed = select.value !== items[i].dataset.value;
+    select.value = items[i].dataset.value; sync(); close(true);
+    if (changed) select.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+  btn.addEventListener('click', function() { if (list.hidden) open(); else close(true); });
+  btn.addEventListener('keydown', function(e) { if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); open(); } });
+  list.addEventListener('click', function(e) { const li = e.target.closest('[role="option"]'); if (li) choose(items.indexOf(li)); });
+  list.addEventListener('pointermove', function(e) { const li = e.target.closest('[role="option"]'); if (li) { const k = items.indexOf(li); if (k !== active) setActive(k, false); } });
+  list.addEventListener('blur', function() { setTimeout(function() { if (!wrap.contains(document.activeElement)) close(false); }, 0); });
+  list.addEventListener('keydown', function(e) {
+    const page = Math.max(1, Math.floor(list.clientHeight / ((items[0] && items[0].offsetHeight) || 44)) - 1);
+    const k = e.key;
+    if (k === 'ArrowDown') setActive(active + 1); else if (k === 'ArrowUp') setActive(active - 1);
+    else if (k === 'Home') setActive(0); else if (k === 'End') setActive(items.length - 1);
+    else if (k === 'PageDown') setActive(active + page); else if (k === 'PageUp') setActive(active - page);
+    else if (k === 'Enter' || k === ' ') choose(active);
+    else if (k === 'Escape') close(true);
+    else if (k === 'Tab') { close(false); return; }
+    else if (k.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      typed += k.toLowerCase(); clearTimeout(typedTimer); typedTimer = setTimeout(function() { typed = ''; }, 700);
+      const hit = items.findIndex(function(li) { return li.textContent.replace(/^\[[^\]]*\]\s*/, '').toLowerCase().indexOf(typed) === 0; });
+      if (hit >= 0) setActive(hit);
+    } else return;
+    e.preventDefault();
+  });
+  select.addEventListener('change', sync);
+  sync();
+}
+
+function populatePracticeSelect() {
+  const select = document.getElementById('practiceSelect');
+  if (!select || select.dataset.populated) return;
+  select.dataset.populated = '1';
+  PRACTICE_BANK.forEach(function(t) {
+    const opt = document.createElement('option');
+    opt.value = t.id;
+    opt.textContent = '[Original practice] ' + t.label + ' · ' + practiceTypeLabel(t.argType);
+    select.appendChild(opt);
+  });
+  enhancePracticeSelect(select);
+  select.addEventListener('change', renderPracticePreview);
+}
+
+function renderPracticePreview() {
+  const select = document.getElementById('practiceSelect');
+  const preview = document.getElementById('practicePreview');
+  const button = document.getElementById('practiceLoadButton');
+  if (!select || !preview || !button) return;
+  const item = practiceItem(select.value);
+  const loaded = Boolean(item) && item.id === activePracticeId();
+  preview.textContent = '';
+  preview.hidden = !item || loaded;   // once loaded, the question banner below shows it
+  if (item && !loaded) {
+    const tag = document.createElement('div'); tag.className = 'practice-preview__tag'; tag.textContent = 'Original essay practice • Exercise 6 style • ' + practiceTypeLabel(item.argType) + ' argument';
+    const q = document.createElement('p'); q.className = 'practice-preview__question'; q.textContent = item.question;
+    const ul = document.createElement('ul'); ul.className = 'practice-preview__prompts';
+    item.prompts.forEach(function(p) { const li = document.createElement('li'); li.textContent = p; ul.appendChild(li); });
+    const meta = document.createElement('p'); meta.className = 'practice-preview__meta';
+    meta.textContent = 'Audience: ' + item.audience + ' • Target: ' + PRACTICE_WORD_MIN + '–' + PRACTICE_WORD_MAX + ' words • ' + (item.argType === 'balanced' ? PRACTICE_BALANCED : PRACTICE_ONE_SIDED);
+    preview.append(tag, q, ul, meta);
+  }
+  button.disabled = !item || loaded;
+  button.setAttribute('aria-disabled', String(button.disabled));
+  button.textContent = loaded ? 'Question loaded' : 'Use this question';
+}
+
+// Show the picker only when no teacher task is in charge, and keep the selection in step with the question that is actually loaded.
+function syncPracticePicker(resetSelection) {
+  const card = document.getElementById('practicePicker');
+  const note = document.getElementById('teacherTaskNote');
+  const select = document.getElementById('practiceSelect');
+  if (!card || !select) return;
+  const assigned = teacherAssignedTask();
+  card.hidden = assigned || state.teacherMode === true;
+  if (note) note.hidden = !assigned || state.teacherMode === true;
+  const locked = teacherTaskLocked();
+  const leave = document.getElementById('teacherTaskLeaveButton');
+  const noteText = document.getElementById('teacherTaskNoteText');
+  if (leave) leave.hidden = locked;
+  if (noteText) noteText.textContent = locked
+    ? 'Your teacher has set this task. Complete and submit it before choosing a practice question.'
+    : 'Your teacher has set this task.';
+  if (resetSelection) {
+    const id = activePracticeId();
+    select.value = id;
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+}
+
+function confirmWorkReplacement(intro) {
+  gatherUIState();
+  if (!hasCurrentWork()) return true;
+  const practice = state.studyMode !== 'exam';
+  const message = (intro ? intro + ' ' : '') + 'You have writing in your current plan or draft. ' + (practice
+    ? 'It will be saved as a backup in Saved Drafts and you will start a fresh plan. Continue?'
+    : 'Exam Mode cannot save backups, so it will be cleared. Continue?');
+  if (!window.confirm(message)) return false;
+  if (practice) {
+    const drafts = getDrafts();
+    const label = String(state.settings.essayQuestion || 'Previous question').slice(0, 42);
+    let name = 'Backup — ' + label + ' — ' + new Date().toLocaleString();
+    while (drafts.some(function(d) { return d.name === name; })) name += ' (copy)';
+    drafts.unshift({ name: name, date: new Date().toISOString(), plan: Object.assign({}, state.plan), draft: Object.assign({}, state.draft), teacherNotes: state.teacherNotes });
+    safeStorageSet(storageKey('drafts'), JSON.stringify(drafts));
+  }
+  clearCurrentWorkspace();
+  state.examSubmitted = false;
+  return true;
+}
+
+function loadPracticeQuestion() {
+  const select = document.getElementById('practiceSelect');
+  const item = select && practiceItem(select.value);
+  if (!item) { showToast('Choose a practice question first.'); return; }
+  if (item.id === activePracticeId()) { showToast('This question is already loaded.'); return; }
+  if (!confirmWorkReplacement('')) return;
+  state.settings = Object.assign({}, state.settings, {
+    essayQuestion: item.question,
+    audience: item.audience,
+    wordMin: PRACTICE_WORD_MIN,
+    wordMax: PRACTICE_WORD_MAX,
+    argType: item.argType,
+    promptIdeas: item.prompts.map(function(p) { return '• ' + p; }).join('\n'),
+    successCriteria: ''
+  });
+  state.bankTaskId = item.id;
+  state.sharedTaskKey = 'bank:' + item.id;
+  state.controlledTaskId = '';
+  // Write the cleared workspace to the fields first: saveState() reads the fields back, which would otherwise restore the old text.
+  applySettings();
+  saveState();
+  updateAll();
+  showToast('Question loaded. Choose Start Planning when you are ready.');
+  const banner = document.getElementById('taskBanner');
+  if (banner) banner.scrollIntoView({ block: 'start', behavior: 'instant' });
+  const start = document.getElementById('startPlanningButton');
+  if (start) start.focus({ preventScroll: true });
+}
+
+// A teacher task stays in charge until the student chooses to practise something else.
+function leaveTeacherTask() {
+  if (teacherTaskLocked()) { showToast('Finish and submit your teacher\u2019s task first.'); return; }
+  const intro = 'This replaces your teacher\u2019s task on this device with a practice question of your own. You can reopen your teacher\u2019s link at any time.';
+  gatherUIState();
+  if (hasCurrentWork()) {
+    if (!confirmWorkReplacement(intro)) return;
+  } else if (!window.confirm(intro + ' Continue?')) return;
+  clearCurrentWorkspace();
+  state.settings = Object.assign({}, state.settings, { essayQuestion: '', audience: 'teacher', wordMin: PRACTICE_WORD_MIN, wordMax: PRACTICE_WORD_MAX, argType: 'either', promptIdeas: '', successCriteria: '' });
+  state.controlledTaskId = '';
+  state.sharedTaskKey = '';
+  state.bankTaskId = '';
+  state.studyMode = 'practice';
+  state.examSubmitted = false;
+  applySettings();
+  saveState();
+  updateAll();
+  switchTab('task');
 }
 
 // ===== UTILITIES =====
