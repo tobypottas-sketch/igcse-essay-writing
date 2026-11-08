@@ -823,12 +823,12 @@ textarea:focus,input:focus,select:focus{border-color:var(--teal);box-shadow:0 0 
           <button type="button" class="btn btn-primary" id="practiceLoadButton" onclick="loadPracticeQuestion()" disabled aria-disabled="true">Use this question</button>
         </div>
         <div class="practice-preview" id="practicePreview" hidden></div>
-        <p class="practice-note">These are original practice questions written in the style of Cambridge IGCSE 0511 Exercise 6 (120&ndash;160 words). They are not official Cambridge past-paper questions.</p>
+        <p class="practice-note">These are original practice questions written in the style of Cambridge IGCSE 0511 Exercise 6 (120&ndash;160 words). They are not official Cambridge past-paper questions. Every task is an <strong>essay</strong>: write an introduction, developed paragraphs and a conclusion, even when the question mentions a magazine, newspaper or website.</p>
       </div>
     </div>
     <div class="teacher-task-note" id="teacherTaskNote" role="note" hidden>
-      <span>Your teacher has set this task.</span>
-      <button type="button" class="btn btn-outline" onclick="leaveTeacherTask()">Practise a different question</button>
+      <span id="teacherTaskNoteText">Your teacher has set this task.</span>
+      <button type="button" class="btn btn-outline" id="teacherTaskLeaveButton" onclick="leaveTeacherTask()">Practise a different question</button>
     </div>
     <div class="task-banner" id="taskBanner">
       <div class="task-label">Essay Question</div>
@@ -2075,6 +2075,7 @@ function updateModeUI() {
   if (submitBtn) submitBtn.style.display = preSubmitExam ? '' : 'none';
   if (newBtn) newBtn.style.display = locked ? '' : 'none';
   updateDraftClearControls();
+  syncPracticePicker(false);
 }
 
 // ===== TEACHER MODE =====
@@ -3110,6 +3111,10 @@ function activePracticeId() {
   const item = practiceItem(state.bankTaskId);
   return item && item.question === state.settings.essayQuestion ? item.id : '';
 }
+// An unsubmitted Exam Mode task from a teacher link is an active, locked assessment: the student must finish and submit it before practising something else.
+function teacherTaskLocked() {
+  return Boolean(state.controlledTaskId) && state.studyMode === 'exam' && !state.examSubmitted;
+}
 function teacherAssignedTask() {
   return Boolean(state.controlledTaskId) || Boolean(state.sharedTaskKey && String(state.sharedTaskKey).indexOf('bank:') !== 0);
 }
@@ -3227,7 +3232,7 @@ function renderPracticePreview() {
   preview.textContent = '';
   preview.hidden = !item || loaded;   // once loaded, the question banner below shows it
   if (item && !loaded) {
-    const tag = document.createElement('div'); tag.className = 'practice-preview__tag'; tag.textContent = 'Original practice • Exercise 6 style • ' + practiceTypeLabel(item.argType) + ' argument';
+    const tag = document.createElement('div'); tag.className = 'practice-preview__tag'; tag.textContent = 'Original essay practice • Exercise 6 style • ' + practiceTypeLabel(item.argType) + ' argument';
     const q = document.createElement('p'); q.className = 'practice-preview__question'; q.textContent = item.question;
     const ul = document.createElement('ul'); ul.className = 'practice-preview__prompts';
     item.prompts.forEach(function(p) { const li = document.createElement('li'); li.textContent = p; ul.appendChild(li); });
@@ -3249,6 +3254,13 @@ function syncPracticePicker(resetSelection) {
   const assigned = teacherAssignedTask();
   card.hidden = assigned || state.teacherMode === true;
   if (note) note.hidden = !assigned || state.teacherMode === true;
+  const locked = teacherTaskLocked();
+  const leave = document.getElementById('teacherTaskLeaveButton');
+  const noteText = document.getElementById('teacherTaskNoteText');
+  if (leave) leave.hidden = locked;
+  if (noteText) noteText.textContent = locked
+    ? 'Your teacher has set this task. Complete and submit it before choosing a practice question.'
+    : 'Your teacher has set this task.';
   if (resetSelection) {
     const id = activePracticeId();
     select.value = id;
@@ -3308,6 +3320,7 @@ function loadPracticeQuestion() {
 
 // A teacher task stays in charge until the student chooses to practise something else.
 function leaveTeacherTask() {
+  if (teacherTaskLocked()) { showToast('Finish and submit your teacher\u2019s task first.'); return; }
   const intro = 'This replaces your teacher\u2019s task on this device with a practice question of your own. You can reopen your teacher\u2019s link at any time.';
   gatherUIState();
   if (hasCurrentWork()) {

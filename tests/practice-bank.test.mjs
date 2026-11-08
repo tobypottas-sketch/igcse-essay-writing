@@ -38,6 +38,20 @@ test('every task has a situation, audience, purpose, three prompts and the 120-1
   }
 });
 
+test('every task is clearly an essay, not an article, even for magazines, newspapers and websites', () => {
+  for (const t of bank) {
+    assert.match(t.question, /\bessay\b/i, t.id);
+    assert.doesNotMatch(t.question + t.prompts.join(' '), /\barticle\b|\breport\b|\bletter\b/i, t.id);
+  }
+  assert.match(html, /Every task is an <strong>essay<\/strong>/);
+});
+
+test('an unsubmitted Exam Mode teacher task cannot be left', () => {
+  assert.match(html, /function teacherTaskLocked\(\) \{\n  return Boolean\(state\.controlledTaskId\) && state\.studyMode === 'exam' && !state\.examSubmitted;/);
+  assert.match(html, /function leaveTeacherTask\(\) \{\n  if \(teacherTaskLocked\(\)\)/);
+  assert.match(html, /leave\.hidden = locked;/);
+});
+
 test('original practice is never presented as an official Cambridge question', () => {
   for (const t of bank) assert.doesNotMatch(JSON.stringify(t), /cambridge|past[- ]paper|specimen|mark scheme/i, t.id);
   assert.match(html, /\[Original practice\]/);
