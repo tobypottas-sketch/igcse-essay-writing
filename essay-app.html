@@ -723,6 +723,10 @@ textarea:focus,input:focus,select:focus{border-color:var(--teal);box-shadow:0 0 
 @media(max-width:700px){.hub-return-link{padding:8px 12px;font-size:.78rem}}
 
 
+/* AI student feedback host (Review tab) */
+.essay-feedback-host{margin-bottom:18px}
+.essay-feedback-host[hidden]{display:none}
+
 /* Practice question picker (Task tab) */
 .practice-picker{margin-bottom:18px;overflow:visible}
 .practice-picker .card-body{padding:16px 20px 18px}
@@ -1040,6 +1044,9 @@ textarea:focus,input:focus,select:focus{border-color:var(--teal);box-shadow:0 0 
       </div>
     </div>
     <p class="review-estimate-note">These are basic writing observations, not an assessment of Cambridge quality. Your teacher can evaluate relevance, development and language.</p>
+
+    <!-- AI student feedback (Hub module; Practice Mode only) -->
+    <div id="studentFeedbackHost" class="essay-feedback-host" hidden></div>
 
     <!-- Suggestions -->
     <div class="card review-priority-card">
@@ -1941,7 +1948,26 @@ function clearCurrentWorkspace() {
   state.draft = { intro:'', arg1:'', arg2:'', conc:'' };
   state.teacherNotes = '';
   state.lastAnalysis = null;
+  resetEssayFeedback();
 }
+
+// ===== AI STUDENT FEEDBACK HOOKS (used by the Hub's essay-feedback.js; nothing here marks or sends anything) =====
+// Feedback is offered in Practice Mode only: never in Exam Mode, including a teacher-controlled Exam task.
+function resetEssayFeedback() { window.dispatchEvent(new Event('essay-feedback-reset')); }
+function syncFeedbackHost() {
+  const host = document.getElementById('studentFeedbackHost');
+  if (host) host.hidden = host.dataset.ready !== '1' || state.studyMode === 'exam';
+}
+document.addEventListener('essay-feedback-ready', syncFeedbackHost);
+window.getEssayFeedbackContext = function() {
+  const s = state.settings;
+  return {
+    allowed: state.studyMode !== 'exam',
+    task: { question: s.essayQuestion || '', audience: s.audience || '', prompts: s.promptIdeas || '', wordMin: Number(s.wordMin) || 120, wordMax: Number(s.wordMax) || 160 },
+    sections: { intro: gv('draftIntro'), arg1: gv('draftArg1'), arg2: gv('draftArg2'), conc: gv('draftConc') }
+  };
+};
+window.essayFeedbackRevise = function() { switchTab('draft'); };
 
 function setStudyMode(mode) {
   if (state.controlledTaskId) {
@@ -2076,6 +2102,8 @@ function updateModeUI() {
   if (newBtn) newBtn.style.display = locked ? '' : 'none';
   updateDraftClearControls();
   syncPracticePicker(false);
+  if (exam) resetEssayFeedback();
+  syncFeedbackHost();
 }
 
 // ===== TEACHER MODE =====
@@ -3366,6 +3394,10 @@ function closeModal() {
 document.getElementById('modalOverlay').addEventListener('click', function(e) {
   if (e.target === this) closeModal();
 });
+</script>
+<script type="module">
+// Inside the Self-Study Hub only: load the Hub's student-feedback module. Standalone, or if the Hub path is unavailable, nothing happens.
+if (window.parent !== window) import('/igcse-self-study-hub/src/assessor/essay-feedback.js').catch(function() {});
 </script>
 </body>
 </html>
