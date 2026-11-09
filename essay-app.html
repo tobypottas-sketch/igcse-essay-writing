@@ -729,6 +729,8 @@ textarea:focus,input:focus,select:focus{border-color:var(--teal);box-shadow:0 0 
 
 /* Practice question picker (Task tab) */
 .practice-picker{margin-bottom:18px;overflow:visible}
+/* The picker card must not clip its menu. A plain .practice-picker rule loses to the later ".card{overflow:hidden}" rules (this file and essay-suite-refresh.css, injected by index.html), which cut the open list off at the card's edge and let the next section sit over it. The id selector wins regardless of stylesheet order. */
+#practicePicker.card.practice-picker{overflow:visible}
 .practice-picker .card-body{padding:16px 20px 18px}
 .practice-picker label{display:block;margin-bottom:8px}
 .practice-picker__row{display:flex;gap:10px;align-items:stretch;flex-wrap:wrap}
@@ -3179,14 +3181,17 @@ function enhancePracticeSelect(select) {
     active = Math.max(0, Math.min(items.length - 1, i));
     items.forEach(function(li, k) { li.classList.toggle('is-active', k === active); });
     list.setAttribute('aria-activedescendant', items[active].id);
-    if (scroll !== false) items[active].scrollIntoView({ block: 'nearest' });
+    // Scroll only the list's own box. Element.scrollIntoView() also scrolls the window, which drags the page back to the menu if the student has scrolled away.
+    if (scroll !== false) {
+      const li = items[active], top = active === 0 ? 0 : li.offsetTop, bottom = li.offsetTop + li.offsetHeight;
+      if (top < list.scrollTop) list.scrollTop = top; else if (bottom > list.scrollTop + list.clientHeight) list.scrollTop = bottom - list.clientHeight;
+    }
   }
   function place() {
     list.style.maxHeight = ''; list.classList.remove('is-up');
     const row = (items[0] && items[0].offsetHeight) || 44, want = row * 6.5 + 8, TOP = 12;
-    let r = btn.getBoundingClientRect();
-    // Not enough room below: bring the picker up the page so the whole menu fits without being clipped.
-    if (window.innerHeight - r.bottom - 12 < want && r.top > TOP) { window.scrollBy({ top: r.top - TOP, behavior: 'instant' }); r = btn.getBoundingClientRect(); }
+    const r = btn.getBoundingClientRect();
+    // Never scroll the document to make room: open on whichever side has more space and let the list scroll inside its own bounded box.
     const below = window.innerHeight - r.bottom - 12, above = r.top - TOP;
     const up = below < Math.min(want, 200) && above > below;
     const room = Math.max(row * 2, Math.min(want, up ? above : below));
