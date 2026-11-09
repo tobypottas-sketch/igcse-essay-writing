@@ -72,6 +72,7 @@ const VIEWPORTS = [
   { label: 'desktop', width: 1100, height: 900 },
   { label: 'short desktop', width: 1366, height: 600 },
   { label: 'very short', width: 1100, height: 420 },
+  { label: 'tablet', width: 820, height: 900, isMobile: true, hasTouch: true },
   { label: 'phone', width: 390, height: 700, isMobile: true, hasTouch: true }
 ];
 
@@ -135,7 +136,9 @@ for (const embedded of [false, true]) {
             open: !list.hidden, rows: rows.length, visible: visible.length, covered,
             cardOverflow: getComputedStyle(card).overflow, up: list.classList.contains('is-up'),
             top: lr.top, bottom: lr.bottom, hasScroll: list.scrollHeight > list.clientHeight + 1,
-            hOverflow: document.documentElement.scrollWidth > document.documentElement.clientWidth + 1
+            hOverflow: document.documentElement.scrollWidth > document.documentElement.clientWidth + 1,
+            comboW: Math.round(document.getElementById('practiceCombo').getBoundingClientRect().width), menuW: Math.round(lr.width),
+            sameRow: Math.abs(document.querySelector('.practice-picker__row .btn').getBoundingClientRect().top - document.getElementById('practiceCombo').getBoundingClientRect().top) < 2
           };
         });
         const opened = await y();
@@ -144,6 +147,9 @@ for (const embedded of [false, true]) {
         if (probe.covered) failures.push(`${tag}: ${probe.covered} of ${probe.visible} visible rows are covered by other content`);
         if (probe.visible < Math.min(3, probe.rows)) failures.push(`${tag}: only ${probe.visible} rows usable`);
         if (probe.top < -1 || probe.bottom > vp.height + 1) failures.push(`${tag}: menu leaves the viewport (${Math.round(probe.top)}..${Math.round(probe.bottom)} of ${vp.height})`);
+        if (probe.comboW > 561) failures.push(`${tag}: selector is ${probe.comboW}px wide (max 560)`);
+        if (Math.abs(probe.menuW - probe.comboW) > 1) failures.push(`${tag}: menu ${probe.menuW}px differs from selector ${probe.comboW}px`);
+        if (vp.width >= 700 && !probe.sameRow) failures.push(`${tag}: Use this question button is not beside the selector`);
         if (probe.hOverflow) failures.push(`${tag}: horizontal overflow`);
         if (opened !== start) failures.push(`${tag}: opening moved the page ${start} -> ${opened}`);
 
